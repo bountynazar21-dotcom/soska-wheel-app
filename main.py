@@ -4,7 +4,12 @@ import random
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import (
+    HTMLResponse,
+    JSONResponse,
+    FileResponse,
+    PlainTextResponse,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -22,31 +27,19 @@ from database import SessionLocal, Base, engine, Spin
 
 logging.basicConfig(level=logging.INFO)
 
-# Токен бота — на проді краще з ENV
-BOT_TOKEN = os.environ.get(
-    "BOT_TOKEN",
-    "8302313515:AAG9hG6lAxhkiERKqNF5rINL2fuIiIz2Bb0",  # можна прибрати, якщо вже все виніс в ENV
-)
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+APP_BASE_URL = os.environ.get("APP_BASE_URL", "https://soska-wheel-app-production.up.railway.app")
 
-# Базовий URL бекенду (для адмінки та WEBAPP_URL)
-APP_BASE_URL = os.environ.get(
-    "APP_BASE_URL",
-    "https://soska-wheel-app-production.up.railway.app",
-)
-
-# URL WebApp (колесо фортуни)
 WEBAPP_URL = os.environ.get(
     "WEBAPP_URL",
     f"{APP_BASE_URL}/static/index.html",
 )
 
-# Адміни
 ADMINS: set[int] = {
     769431786,
     5480082089,
 }
 
-# Призи
 PRIZES = [
     "Знижка 10%",
     "Знижка 15%",
@@ -69,24 +62,28 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Таблиці БД
+# Створення таблиць БД
 Base.metadata.create_all(bind=engine)
 
 
-@app.get("/", include_in_schema=False)
-async def root():
-    """
-    Щоб при переході на корінь одразу відкривало колесо.
-    """
-    return RedirectResponse(url="/static/index.html")
+# --- СЕРВІСНІ РОУТИ ДЛЯ ПЕРЕВІРКИ ---
 
+@app.get("/ping", response_class=PlainTextResponse)
+async def ping():
+    # дуже простий хелсчек
+    return "pong"
+
+
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    # просто віддаємо index.html з папки static
+    return FileResponse("static/index.html")
+
+
+# --- API для колеса ---
 
 @app.post("/spin")
 async def spin(request: Request):
-    """
-    Ендпоінт, куди стукає фронт (wheel.js).
-    Приймає username, user_id, check; повертає prize.
-    """
     data = await request.json()
 
     username = data.get("username") or "unknown"
@@ -95,7 +92,6 @@ async def spin(request: Request):
 
     db = SessionLocal()
     try:
-        # Якщо цей чек уже брав участь — повертаємо той самий приз
         existing = (
             db.query(Spin)
             .filter(Spin.check_number == check_number)
@@ -108,7 +104,6 @@ async def spin(request: Request):
                 "message": "Цей чек уже брав участь у розіграші."
             })
 
-        # Рандомний приз
         prize = random.choice(PRIZES)
 
         row = Spin(
@@ -129,11 +124,6 @@ async def spin(request: Request):
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request, user_id: int | None = None):
-    """
-    Адмінка з усіма спінами.
-    Доступ тільки для ID, які є в ADMINS.
-    user_id передаємо як query-параметр: /admin?user_id=123
-    """
     if user_id is None or user_id not in ADMINS:
         return HTMLResponse(
             "<h2 style='color:red'>ACCESS DENIED</h2>"
@@ -151,17 +141,9 @@ async def admin_page(request: Request, user_id: int | None = None):
     finally:
         db.close()
 
-# ======================================
-# SIMPLE HEALTHCHECK
-# ======================================
-
-@app.get("/", response_class=JSONResponse)
-async def root():
-    return {"status": "ok"}
-
 
 # ======================================
-# TELEGRAM BOT (AIROGRAM 3)
+# TELEGRAM BOT
 # ======================================
 
 bot: Bot | None = None
@@ -169,9 +151,6 @@ dp: Dispatcher | None = None
 
 
 def setup_bot():
-    """
-    Створює бота та диспетчер, якщо вони ще не створені.
-    """
     global bot, dp
 
     if bot is not None and dp is not None:
@@ -179,7 +158,6 @@ def setup_bot():
 
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
-
     router = Router()
 
     @router.message(Command("start"))
@@ -197,15 +175,11 @@ def setup_bot():
 
         await message.answer(
             "Натисни кнопку, щоб відкрити колесо фортуни.",
-            reply_markup=kb
+            reply_markup=kb,
         )
 
     @router.message(Command("admin"))
     async def admin_cmd(message: Message):
-        """
-        Команда /admin — тільки для адмінів.
-        Кидає лінк на веб-адмінку з підставленим user_id.
-        """
         uid = message.from_user.id
 
         if uid not in ADMINS:
@@ -222,9 +196,6 @@ def setup_bot():
 
 
 async def run_bot():
-    """
-    Запускає polling у фоні.
-    """
     global bot, dp
 
     setup_bot()
@@ -243,7 +214,9 @@ async def run_bot():
 async def startup():
     Base.metadata.create_all(bind=engine)
     asyncio.create_task(run_bot())
-    logging.info(f"Application startup complete. BASE_URL={APP_BASE_URL}, WEBAPP_URL={WEBAPP_URL}")
+    logging.info(
+        f"Application startup complete. BASE_URL={APP_BASE_URL}, WEBAPP_URL={WEBAPP_URL}"
+    )
 
 
 @app.on_event("shutdown")
