@@ -151,6 +151,14 @@ async def admin_page(request: Request, user_id: int | None = None):
     finally:
         db.close()
 
+# ======================================
+# SIMPLE HEALTHCHECK
+# ======================================
+
+@app.get("/", response_class=JSONResponse)
+async def root():
+    return {"status": "ok"}
+
 
 # ======================================
 # TELEGRAM BOT (AIROGRAM 3)
