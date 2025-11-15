@@ -1,5 +1,14 @@
 [build]
-builder = "nixpacks"
+builder = "NIXPACKS"
 
-[start]
-cmd = "uvicorn main:app --host 0.0.0.0 --port $PORT"
+[deploy]
+# Головна команда старту контейнера
+startCommand = "python main.py"
+
+# Хелсчек — будемо пінгати бекенд
+healthcheckPath = "/ping"
+healthcheckTimeout = 120
+
+# Щоб перезапускався, якщо впаде
+restartPolicyType = "ALWAYS"
+restartPolicyMaxRetries = 5
