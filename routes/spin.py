@@ -1,3 +1,5 @@
+import random
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
@@ -9,10 +11,6 @@ router = APIRouter()
 
 @router.post("/spin")
 async def spin(request: Request):
-    """
-    Ендпоінт, куди стукає фронт (wheel.js).
-    Приймає username, user_id, check; повертає prize.
-    """
     data = await request.json()
 
     username = data.get("username") or "unknown"
@@ -21,21 +19,20 @@ async def spin(request: Request):
 
     db = SessionLocal()
     try:
-        # Якщо цей чек уже брав участь — повертаємо той самий приз
         existing = (
             db.query(Spin)
             .filter(Spin.check_number == check_number)
             .first()
         )
         if existing:
-            return JSONResponse({
-                "prize": existing.prize,
-                "repeat": True,
-                "message": "Цей чек уже брав участь у розіграші."
-            })
+            return JSONResponse(
+                {
+                    "prize": existing.prize,
+                    "repeat": True,
+                    "message": "Цей чек уже брав участь у розіграші.",
+                }
+            )
 
-        # Рандомний приз
-        import random
         prize = random.choice(PRIZES)
 
         row = Spin(
@@ -52,3 +49,8 @@ async def spin(request: Request):
 
     finally:
         db.close()
+
+
+@router.get("/ping")
+async def ping():
+    return {"status": "ok"}

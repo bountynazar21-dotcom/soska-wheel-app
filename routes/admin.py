@@ -6,22 +6,16 @@ from database import SessionLocal, Spin
 from config import ADMINS
 
 router = APIRouter()
-
 templates = Jinja2Templates(directory="templates")
 
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request, user_id: int | None = None):
-    """
-    Адмінка з усіма спінами.
-    Доступ тільки для ID, які є в ADMINS.
-    user_id передаємо як /admin?user_id=123
-    """
     if user_id is None or user_id not in ADMINS:
         return HTMLResponse(
             "<h2 style='color:red'>ACCESS DENIED</h2>"
             "<p>У вас немає прав доступу.</p>",
-            status_code=403
+            status_code=403,
         )
 
     db = SessionLocal()
@@ -29,7 +23,7 @@ async def admin_page(request: Request, user_id: int | None = None):
         spins = db.query(Spin).order_by(Spin.id.desc()).all()
         return templates.TemplateResponse(
             "admin.html",
-            {"request": request, "spins": spins}
+            {"request": request, "spins": spins},
         )
     finally:
         db.close()

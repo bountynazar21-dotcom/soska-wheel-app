@@ -1,18 +1,18 @@
 import os
 
-# Токен бота (краще тримати в env, а не хардкодити)
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8302313515:AAG9hG6lAxhkiERKqNF5rINL2fuIiIz2Bb0")
-
-# Базовий URL твого Railway-деплою
-APP_BASE_URL = os.environ.get(
+# Базовий URL твого Railway-домену
+APP_BASE_URL = os.getenv(
     "APP_BASE_URL",
-    "https://soska-wheel-app-production.up.railway.app"
+    "https://soska-wheel-app-production.up.railway.app",
 )
 
-# URL WebApp
-WEBAPP_URL = os.environ.get(
+# Токен бота
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# WebApp URL (колесо)
+WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html"
+    f"{APP_BASE_URL}/static/index.html",
 )
 
 # Адміни
@@ -21,7 +21,7 @@ ADMINS: set[int] = {
     5480082089,
 }
 
-# Список призів
+# Призи
 PRIZES = [
     "Знижка 10%",
     "Знижка 15%",
