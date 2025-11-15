@@ -1,9 +1,10 @@
 import asyncio
 import logging
-import os  # 👈 додали
+import os
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from database import Base, engine
 from routes.spin import router as spin_router
@@ -17,10 +18,10 @@ app = FastAPI()
 # Статика
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Створення таблиць БД (на всякий випадок)
+# Створення таблиць БД
 Base.metadata.create_all(bind=engine)
 
-# Підключаємо маршрути
+# Маршрути
 app.include_router(spin_router)
 app.include_router(admin_router)
 
@@ -38,14 +39,29 @@ async def shutdown():
     logging.info("Application shutdown complete")
 
 
+# ======== HEALTHCHECK ========
+
+@app.get("/ping")
+async def ping():
+    return JSONResponse({"status": "ok"})
+
+
+# ======== ROOT → STATIC ========
+
+@app.get("/")
+async def root():
+    # щоб при вході на домен відкривалось колесо
+    return RedirectResponse(url="/static/index.html")
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.environ.get("PORT", 8000))  # 👈 беремо порт з env
+    port = int(os.environ.get("PORT", 8000))  # Railway підставляє свій PORT
 
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
         port=port,
-        reload=False,  # 👈 в проді без reload
+        reload=False,
     )
