@@ -50,7 +50,3 @@ async def spin(request: Request):
     finally:
         db.close()
 
-
-@router.get("/ping")
-async def ping():
-    return {"status": "ok"}
