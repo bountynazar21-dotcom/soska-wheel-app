@@ -4,12 +4,7 @@ import random
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import (
-    HTMLResponse,
-    JSONResponse,
-    FileResponse,
-    PlainTextResponse,
-)
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -27,13 +22,20 @@ from database import SessionLocal, Base, engine, Spin
 
 logging.basicConfig(level=logging.INFO)
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
-APP_BASE_URL = os.environ.get("APP_BASE_URL", "https://soska-wheel-app-production.up.railway.app")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8302313515:AAG9hG6lAxhkiERKqNF5rINL2fuIiIz2Bb0")
+
+APP_BASE_URL = os.environ.get(
+    "APP_BASE_URL",
+    "https://soska-wheel-app-production.up.railway.app"
+)
 
 WEBAPP_URL = os.environ.get(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html",
+    f"{APP_BASE_URL}/static/index.html"
 )
+
+# Чи запускати бота разом з бекендом
+RUN_BOT = os.getenv("RUN_BOT", "true").lower() == "true"
 
 ADMINS: set[int] = {
     769431786,
@@ -58,29 +60,16 @@ PRIZES = [
 
 app = FastAPI()
 
-# Статика + шаблони
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Створення таблиць БД
 Base.metadata.create_all(bind=engine)
 
 
-# --- СЕРВІСНІ РОУТИ ДЛЯ ПЕРЕВІРКИ ---
-
-@app.get("/ping", response_class=PlainTextResponse)
+@app.get("/ping")
 async def ping():
-    # дуже простий хелсчек
-    return "pong"
+    return {"status": "ok"}
 
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    # просто віддаємо index.html з папки static
-    return FileResponse("static/index.html")
-
-
-# --- API для колеса ---
 
 @app.post("/spin")
 async def spin(request: Request):
@@ -143,7 +132,7 @@ async def admin_page(request: Request, user_id: int | None = None):
 
 
 # ======================================
-# TELEGRAM BOT
+# TELEGRAM BOT (AIROGRAM 3)
 # ======================================
 
 bot: Bot | None = None
@@ -158,6 +147,7 @@ def setup_bot():
 
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
+
     router = Router()
 
     @router.message(Command("start"))
@@ -167,7 +157,7 @@ def setup_bot():
                 [
                     InlineKeyboardButton(
                         text="🎡 Відкрити колесо",
-                        web_app=WebAppInfo(url=WEBAPP_URL),
+                        web_app=WebAppInfo(url=WEBAPP_URL)
                     )
                 ]
             ]
@@ -175,7 +165,7 @@ def setup_bot():
 
         await message.answer(
             "Натисни кнопку, щоб відкрити колесо фортуни.",
-            reply_markup=kb,
+            reply_markup=kb
         )
 
     @router.message(Command("admin"))
@@ -213,10 +203,14 @@ async def run_bot():
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
-    asyncio.create_task(run_bot())
+
     logging.info(
-        f"Application startup complete. BASE_URL={APP_BASE_URL}, WEBAPP_URL={WEBAPP_URL}"
+        f"Application startup complete. "
+        f"BASE_URL={APP_BASE_URL}, WEBAPP_URL={WEBAPP_URL}, RUN_BOT={RUN_BOT}"
     )
+
+    if RUN_BOT:
+        asyncio.create_task(run_bot())
 
 
 @app.on_event("shutdown")
@@ -238,5 +232,5 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,
+        reload=True
     )
