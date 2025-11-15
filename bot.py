@@ -96,7 +96,10 @@ async def process_name(message: Message, state: FSMContext) -> None:
 
 
 @router.message(Registration.waiting_for_phone, F.text)
-async def process_phone(message: Message, state: FSMContext) -> None:
+async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
+    """
+    Отримали телефон → збираємо всі дані → шлемо адмінам + даємо кнопку WebApp.
+    """
     phone = message.text.strip()
     await state.update_data(phone=phone)
 
@@ -120,7 +123,7 @@ async def process_phone(message: Message, state: FSMContext) -> None:
     else:
         caption_lines.append(f"User ID: {message.from_user.id}")
 
-    # “Невидимий” внутрішній номер (можеш вважати це інвізом)
+    # “Невидимий” внутрішній номер (інвіз)
     caption_lines.extend(
         [
             "",
@@ -134,7 +137,7 @@ async def process_phone(message: Message, state: FSMContext) -> None:
     if check_photo_id:
         for admin_id in ADMINS:
             try:
-                await message.bot.send_photo(
+                await bot.send_photo(
                     chat_id=admin_id,
                     photo=check_photo_id,
                     caption=caption,
