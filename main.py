@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os  # 👈 додали
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -40,9 +41,11 @@ async def shutdown():
 if __name__ == "__main__":
     import uvicorn
 
+    port = int(os.environ.get("PORT", 8000))  # 👈 беремо порт з env
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True
+        port=port,
+        reload=False,  # 👈 в проді без reload
     )
