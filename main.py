@@ -4,7 +4,7 @@ import random
 import logging
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -22,25 +22,31 @@ from database import SessionLocal, Base, engine, Spin
 
 logging.basicConfig(level=logging.INFO)
 
-# !!! ВСТАВ СЮДИ РЕАЛЬНИЙ ТОКЕН БОТА !!!
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "8302313515:AAG9hG6lAxhkiERKqNF5rINL2fuIiIz2Bb0")
+# Токен бота — на проді краще з ENV
+BOT_TOKEN = os.environ.get(
+    "BOT_TOKEN",
+    "8302313515:AAG9hG6lAxhkiERKqNF5rINL2fuIiIz2Bb0",  # можна прибрати, якщо вже все виніс в ENV
+)
 
-# Базовий URL бекенду (для формування лінків на адмінку)
-APP_BASE_URL = os.environ.get("APP_BASE_URL", "https://your-domain.com")
+# Базовий URL бекенду (для адмінки та WEBAPP_URL)
+APP_BASE_URL = os.environ.get(
+    "APP_BASE_URL",
+    "https://soska-wheel-app-production.up.railway.app",
+)
 
 # URL WebApp (колесо фортуни)
 WEBAPP_URL = os.environ.get(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html"
+    f"{APP_BASE_URL}/static/index.html",
 )
 
-# Адміни (з твого ADMIN_IDS)
+# Адміни
 ADMINS: set[int] = {
     769431786,
     5480082089,
 }
 
-# Призи (можеш змінювати під акцію)
+# Призи
 PRIZES = [
     "Знижка 10%",
     "Знижка 15%",
@@ -63,8 +69,16 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Створення таблиць БД
+# Таблиці БД
 Base.metadata.create_all(bind=engine)
+
+
+@app.get("/", include_in_schema=False)
+async def root():
+    """
+    Щоб при переході на корінь одразу відкривало колесо.
+    """
+    return RedirectResponse(url="/static/index.html")
 
 
 @app.post("/spin")
@@ -167,7 +181,7 @@ def setup_bot():
                 [
                     InlineKeyboardButton(
                         text="🎡 Відкрити колесо",
-                        web_app=WebAppInfo(url=WEBAPP_URL)
+                        web_app=WebAppInfo(url=WEBAPP_URL),
                     )
                 ]
             ]
@@ -221,7 +235,7 @@ async def run_bot():
 async def startup():
     Base.metadata.create_all(bind=engine)
     asyncio.create_task(run_bot())
-    logging.info("Application startup complete")
+    logging.info(f"Application startup complete. BASE_URL={APP_BASE_URL}, WEBAPP_URL={WEBAPP_URL}")
 
 
 @app.on_event("shutdown")
@@ -243,5 +257,5 @@ if __name__ == "__main__":
         "main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True
+        reload=True,
     )
