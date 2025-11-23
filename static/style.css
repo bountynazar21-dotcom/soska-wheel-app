@@ -39,14 +39,15 @@ body {
 .app {
   width: 95%;
   max-width: 420px;
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: 16px;
-  padding: 18px;
+  background: transparent; /* було rgba(0,0,0,0.55) */
+  border-radius: 0;         /* можеш залишити або прибрати */
+  padding: 0;               /* мінімальний внутрішній відступ */
   text-align: center;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
-  margin-top: 16px; /* трохи відступу від верхнього краю */
+  backdrop-filter: none;    /* відключає блюр всередині */
+  box-shadow: none;         /* забирає тінь */
+  margin-top: 20px;         /* щоб трохи відступало від верху */
 }
+
 
 .brand {
   font-size: 20px;
