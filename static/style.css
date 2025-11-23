@@ -3,12 +3,13 @@
   --purple: #7b45ff;
 }
 
-/* Щоб фон тягнувся на весь екран у WebApp */
+/* Щоб фон реально тягнувся на весь екран у WebApp */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  height: -webkit-fill-available; /* важливо для Telegram WebView */
 }
 
 /* Фон для WebApp */
@@ -16,17 +17,21 @@ body {
   font-family: Inter, Arial, sans-serif;
   background-color: #050508; /* фолбек, якщо не підгрузиться картинка */
 
-  /* ГОЛОВНЕ ВИПРАВЛЕННЯ: абсолютний шлях до bg.png */
+  /* шлях до твого bg.png */
   background-image: url("/static/assets/bg.png");
 
   background-size: cover;
-  background-position: center;
+  background-position: top center;
   background-repeat: no-repeat;
 
-  /* без fixed, щоб в телеграмі не було багів зі скролом */
+  width: 100%;
+  min-height: 100%;
+  height: -webkit-fill-available;
+
+  /* центруємо картку з колесом */
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   color: #fff;
 }
 
@@ -40,6 +45,7 @@ body {
   text-align: center;
   backdrop-filter: blur(12px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  margin-top: 16px; /* трохи відступу від верхнього краю */
 }
 
 .brand {
