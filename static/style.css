@@ -4,12 +4,13 @@
 }
 
 /* Щоб фон реально тягнувся на весь екран у WebApp */
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100%;
-  height: -webkit-fill-available; /* важливо для Telegram WebView */
+  height: 100%;
 }
 
 /* Фон для WebApp */
@@ -19,35 +20,38 @@ body {
 
   /* шлях до твого bg.png */
   background-image: url("/static/assets/bg.png");
-
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
 
+  /* ключові штуки для iOS / Telegram */
+  min-height: 100vh;
+  min-height: -webkit-fill-available; /* iOS Safari / Telegram */
   width: 100%;
-  min-height: 100%;
-  height: -webkit-fill-available;
 
-  /* центруємо картку з колесом */
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+
+  /* щоб контент не прижимало вгору через safe area */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
   color: #fff;
 }
 
-/* Скляна картка поверх фону */
+/* Прозора обгортка колеса */
 .app {
   width: 95%;
   max-width: 420px;
-  background: transparent; /* було rgba(0,0,0,0.55) */
-  border-radius: 0;         /* можеш залишити або прибрати */
-  padding: 0;               /* мінімальний внутрішній відступ */
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   text-align: center;
-  backdrop-filter: none;    /* відключає блюр всередині */
-  box-shadow: none;         /* забирає тінь */
-  margin-top: 20px;         /* щоб трохи відступало від верху */
+  backdrop-filter: none;
+  box-shadow: none;
+  margin-top: 20px;
 }
-
 
 .brand {
   font-size: 20px;
@@ -174,4 +178,3 @@ body {
     transform: translateY(-10px);
   }
 }
-
