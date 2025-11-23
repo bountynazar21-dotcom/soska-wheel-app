@@ -12,8 +12,9 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 # WebApp URL (колесо)
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html?v=3",
+    f"{APP_BASE_URL}/static/assets/index.html?v=1",
 )
+
 
 # Адміни
 ADMINS: set[int] = {

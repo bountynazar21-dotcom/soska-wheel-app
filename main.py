@@ -51,7 +51,7 @@ async def ping():
 @app.get("/")
 async def root():
     # щоб при вході на домен відкривалось колесо
-    return RedirectResponse(url="/static/index.html")
+    return RedirectResponse(url="/static/assets/index.html?v=1")
 
 
 if __name__ == "__main__":
