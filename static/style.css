@@ -11,14 +11,18 @@ html, body {
   height: 100%;
 }
 
-/* ТУТ міняєш фон під свій PNG/SVG */
+/* Фон для WebApp */
 body {
   font-family: Inter, Arial, sans-serif;
   background-color: #050508; /* фолбек, якщо не підгрузиться картинка */
-  background-image: url("bg.png"); /* або bg.svg */
+
+  /* ГОЛОВНЕ ВИПРАВЛЕННЯ: абсолютний шлях до bg.png */
+  background-image: url("/static/assets/bg.png");
+
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+
   /* без fixed, щоб в телеграмі не було багів зі скролом */
   display: flex;
   justify-content: center;
