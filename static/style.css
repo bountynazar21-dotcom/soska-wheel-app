@@ -3,26 +3,39 @@
   --purple: #7b45ff;
 }
 
-body {
+/* Щоб фон тягнувся на весь екран у WebApp */
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ТУТ міняєш фон під свій PNG/SVG */
+body {
   font-family: Inter, Arial, sans-serif;
-  background: linear-gradient(135deg, #0a0520, #12092e);
-  height: 100vh;
+  background-color: #050508; /* фолбек, якщо не підгрузиться картинка */
+  background-image: url("bg.png"); /* або bg.svg */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* без fixed, щоб в телеграмі не було багів зі скролом */
   display: flex;
   justify-content: center;
   align-items: center;
   color: #fff;
 }
 
+/* Скляна картка поверх фону */
 .app {
   width: 95%;
   max-width: 420px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.55);
   border-radius: 16px;
   padding: 18px;
   text-align: center;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
 }
 
 .brand {
@@ -34,8 +47,8 @@ body {
 /* Обгортка колеса + стрілки */
 .wheel-wrap {
   position: relative;
-  width: 320px;
-  height: 320px;
+  width: min(320px, 80vw);
+  height: min(320px, 80vw);
   margin: 0 auto;
 }
 
@@ -52,11 +65,11 @@ body {
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
   display: block;
 }
 
-/* Стрілка зверху (клас .pointer, не id) */
+/* Статичний трикутник-стрілка зверху */
 .pointer {
   position: absolute;
   left: 50%;
@@ -77,7 +90,7 @@ body {
   font-weight: 600;
   background: linear-gradient(90deg, var(--purple), var(--green));
   color: #fff;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
 }
@@ -150,3 +163,4 @@ body {
     transform: translateY(-10px);
   }
 }
+

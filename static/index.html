@@ -4,7 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Soska bar x Punch – Колесо фортуни</title>
+
+  <!-- стилі саме з папки static -->
   <link rel="stylesheet" href="style.css">
+
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -12,10 +16,12 @@
     <h1 class="brand">Soska bar x Punch</h1>
 
     <div class="wheel-wrap">
+      <!-- те, що реально крутиться (обертаємо цілий контейнер) -->
       <div class="wheel-container">
         <img id="wheel" src="assets/wheel.svg" alt="Wheel">
       </div>
 
+      <!-- стрілка поверх колеса, сама не крутиться -->
       <img class="pointer" src="assets/pointer.svg" alt="Pointer">
     </div>
 
@@ -23,10 +29,13 @@
     <p id="result" class="result"></p>
   </div>
 
+  <!-- оверлей салюту -->
   <div id="fireworks" class="fireworks">
     <div id="fireworks-text"></div>
   </div>
 
+  <!-- логіка колеса -->
   <script src="wheel.js"></script>
 </body>
 </html>
+
