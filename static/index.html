@@ -4,11 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Soska bar x Punch – Колесо фортуни</title>
-
-  <!-- ВАЖЛИВО: версія для обходу кешу Telegram -->
-  <link rel="stylesheet" href="style.css?v=14">
-
-  <!-- Telegram WebApp SDK -->
+  <link rel="stylesheet" href="style.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
 <body>
@@ -17,21 +13,27 @@
 
     <div class="wheel-wrap">
       <div class="wheel-container">
-        <img id="wheel" src="assets/wheel.svg" alt="Wheel">
-      </div>
+        <!-- статичне PNG-колесо -->
+        <img id="wheel" src="assets/wheel.png" alt="Wheel">
 
-      <img class="pointer" src="assets/pointer.svg" alt="Pointer">
+        <!-- РОТАТОР, який ми крутимо в JS -->
+        <div id="pointer-rotator" class="pointer-rotator">
+          <img class="pointer" src="assets/pointer.svg" alt="Pointer">
+        </div>
+      </div>
     </div>
 
     <button id="spinBtn" class="spin-btn">🎡 Крутити</button>
     <p id="result" class="result"></p>
   </div>
 
+  <!-- оверлей салюту -->
   <div id="fireworks" class="fireworks">
     <div id="fireworks-text"></div>
   </div>
 
-  <script src="wheel.js?v=10"></script>
+  <script src="wheel.js"></script>
 </body>
 </html>
+
 

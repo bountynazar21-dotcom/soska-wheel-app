@@ -6,26 +6,49 @@ if (tg) {
 }
 
 const btn = document.getElementById("spinBtn");
-const wheelContainer = document.querySelector(".wheel-container"); // КРУТИМО ЦЕ
+const pointerRotator = document.getElementById("pointer-rotator");
 const res = document.getElementById("result");
 const fireworks = document.getElementById("fireworks");
 const fireworksText = document.getElementById("fireworks-text");
 
-// ПОРЯДОК ПРИЗІВ = ПОРЯДОК СЕКТОРІВ НА КАРТИНЦІ (зверху та за годинниковою)
+// Порядок секторів = порядок на картинці, за годинниковою, від ВЕРХУ
 const sectors = [
-  { label: "Рідина Punch" },  // верхній сектор під стрілкою
-  { label: "Знижка 31%" },
-  { label: "Pod система" },
-  { label: "Мерч Soska Bar" },
-  { label: "Дві рідини" },
-  { label: "Картридж" },
-  { label: "Нічого 😅" },
-  { label: "Сюрприз" }
+  "Аромакомпозиції x5",
+  "Відкривачок x10",
+  "Ланцюжок + кліп-холдер x6",
+  "Стікери + ручка x20",
+  "Павучки x45",
+  "Стрічки x55",
+  "Стікери x70",
+  "Стрічки + пахучки x30",
 ];
 
 const sectorAngle = 360 / sectors.length;
-const POINTER_OFFSET = 90; // стрілка зверху
+
 let spinning = false;
+let idle = true;
+let idleAngle = 0;
+let idleTimer = null;
+
+function startIdleSpin() {
+  idle = true;
+  if (idleTimer) return;
+
+  idleTimer = setInterval(() => {
+    if (!idle || !pointerRotator) return;
+    idleAngle = (idleAngle + 0.5) % 360;
+    pointerRotator.style.transition = "none";
+    pointerRotator.style.transform = `rotate(${idleAngle}deg)`;
+  }, 40);
+}
+
+function stopIdleSpin() {
+  idle = false;
+  if (idleTimer) {
+    clearInterval(idleTimer);
+    idleTimer = null;
+  }
+}
 
 function showFireworks(text) {
   if (!fireworks || !fireworksText) return;
@@ -39,7 +62,7 @@ async function spinRequest(payload) {
     const r = await fetch("/spin", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
     return await r.json();
   } catch (e) {
@@ -53,6 +76,8 @@ btn.addEventListener("click", async () => {
   spinning = true;
   btn.disabled = true;
   res.textContent = "Крутимо...";
+
+  stopIdleSpin();
 
   let username = "unknown";
   let user_id = null;
@@ -69,35 +94,36 @@ btn.addEventListener("click", async () => {
   const payload = { username, user_id };
   const { prize, repeat, message } = await spinRequest(payload);
 
-  // шукаємо сектор з таким самим текстом
-  let sectorIndex = sectors.findIndex((s) => s.label === prize);
+  let sectorIndex = sectors.findIndex((name) => name === prize);
   if (sectorIndex === -1) {
-    // якщо бекенд повернув щось нестандартне — крутимо рандомний сектор
     sectorIndex = Math.floor(Math.random() * sectors.length);
   }
 
   const targetAngle = sectorIndex * sectorAngle + sectorAngle / 2;
-  const rotation = 360 * 5 + (POINTER_OFFSET - targetAngle);
+  const extraSpins = 5;
+  const finalRotation = 360 * extraSpins + targetAngle;
 
-  if (!wheelContainer) {
-    console.error("wheel-container not found");
+  if (!pointerRotator) {
+    console.error("pointer-rotator not found");
     res.textContent = prize;
     spinning = false;
     btn.disabled = false;
+    startIdleSpin();
     return;
   }
 
-  // скидаємо кут
-  wheelContainer.style.transition = "none";
-  wheelContainer.style.transform = "rotate(0deg)";
+  // фіксуємо поточний idle-кут
+  pointerRotator.style.transition = "none";
+  pointerRotator.style.transform = `rotate(${idleAngle}deg)`;
 
-  // запускаємо крутку
   requestAnimationFrame(() => {
-    wheelContainer.style.transition = "transform 4s cubic-bezier(.33,1,.68,1)";
-    wheelContainer.style.transform = `rotate(${rotation}deg)`;
+    pointerRotator.style.transition = "transform 4s cubic-bezier(.33,1,.68,1)";
+    pointerRotator.style.transform = `rotate(${finalRotation}deg)`;
   });
 
   const onFinish = () => {
+    idleAngle = finalRotation % 360;
+
     if (repeat) {
       res.textContent = `${message} Ваш приз: ${prize}`;
     } else {
@@ -108,8 +134,13 @@ btn.addEventListener("click", async () => {
 
     spinning = false;
     btn.disabled = false;
-    wheelContainer.removeEventListener("transitionend", onFinish);
+
+    pointerRotator.removeEventListener("transitionend", onFinish);
+    startIdleSpin();
   };
 
-  wheelContainer.addEventListener("transitionend", onFinish, { once: true });
+  pointerRotator.addEventListener("transitionend", onFinish, { once: true });
 });
+
+// запускаємо ідл-обертання поінтера
+startIdleSpin();
