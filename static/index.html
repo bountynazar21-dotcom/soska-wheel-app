@@ -15,10 +15,12 @@
       <div class="wheel-container">
         <!-- статичне PNG-колесо -->
         <img id="wheel" src="assets/wheel.png?v=3" alt="Wheel">
-      </div>
 
-      <!-- поінтер, кеш ламаємо через ?v=3 -->
-      <img id="pointer" src="assets/pointer.svg?v=3" alt="Pointer">
+        <!-- ротатор поінтера: він крутиться в JS -->
+        <div id="pointer-rotator" class="pointer-rotator">
+          <img id="pointer" src="assets/pointer.svg?v=3" alt="Pointer">
+        </div>
+      </div>
     </div>
 
     <button id="spinBtn" class="spin-btn">🎡 Крутити</button>
@@ -33,5 +35,6 @@
   <script src="wheel.js"></script>
 </body>
 </html>
+
 
 
