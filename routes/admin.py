@@ -27,3 +27,4 @@ async def admin_page(request: Request, user_id: int | None = None):
         )
     finally:
         db.close()
+
