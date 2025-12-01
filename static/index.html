@@ -14,13 +14,11 @@
     <div class="wheel-wrap">
       <div class="wheel-container">
         <!-- статичне PNG-колесо -->
-        <img id="wheel" src="assets/wheel.png" alt="Wheel">
-
-        <!-- РОТАТОР, який ми крутимо в JS -->
-        <div id="pointer-rotator" class="pointer-rotator">
-          <img class="pointer" src="assets/pointer.svg" alt="Pointer">
-        </div>
+        <img id="wheel" src="assets/wheel.png?v=3" alt="Wheel">
       </div>
+
+      <!-- поінтер, кеш ламаємо через ?v=3 -->
+      <img id="pointer" src="assets/pointer.svg?v=3" alt="Pointer">
     </div>
 
     <button id="spinBtn" class="spin-btn">🎡 Крутити</button>
