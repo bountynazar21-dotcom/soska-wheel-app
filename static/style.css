@@ -3,13 +3,13 @@
   --purple: #7b45ff;
 }
 
-/* ===== БАЗА: фон + центрування контенту ===== */
+/* ===== БАЗА: фон + центрування ===== */
 
 body {
   margin: 0;
   font-family: Inter, Arial, sans-serif;
 
-  /* НОВИЙ ФОН: підставляємо твій bg.png */
+  /* ФОН: твій bg.png */
   background: #050315 url("assets/bg.png?v=2") center/cover no-repeat fixed;
 
   min-height: 100vh;
@@ -19,13 +19,12 @@ body {
   color: #fff;
 }
 
-/* .app тепер ПРОЗОРИЙ контейнер без темного блоку */
+/* Прозорий контейнер, без темного блоку */
 .app {
   width: 100%;
-  max-width: 420px;
+  max-width: 480px;
   padding: 16px 12px 24px;
   text-align: center;
-  /* прибираємо фон / blur / тінь */
   background: transparent;
   backdrop-filter: none;
   box-shadow: none;
@@ -33,18 +32,18 @@ body {
 }
 
 .brand {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 /* ===== КОЛЕСО ===== */
 
 .wheel-wrap {
   position: relative;
-  width: 360px;   /* трішки збільшене колесо */
-  height: 360px;
-  margin: 0 auto 16px;
+  width: 420px;   /* 🔥 збільшене колесо */
+  height: 420px;
+  margin: 0 auto 18px;
 }
 
 .wheel-container {
@@ -61,14 +60,23 @@ body {
   display: block;
 }
 
-/* Стрілка зверху */
-#pointer {
+/* Ротатор поінтера — крутиться навколо центра */
+.pointer-rotator {
   position: absolute;
-  left: 50%;
-  top: -26px;
-  transform: translateX(-50%);
-  width: 64px;
-  z-index: 10;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* поінтер виходить з центра вгору */
+  transform-origin: 50% 50%;
+  pointer-events: none;
+}
+
+/* Сам поінтер (зелений трикутник) */
+#pointer {
+  width: 72px;
+  margin-top: -32px; /* трохи вище краю колеса, щоб вперся у рамку */
 }
 
 /* ===== КНОПКА + РЕЗУЛЬТАТ ===== */
@@ -132,7 +140,7 @@ body {
   animation: pop 0.8s ease-out, float 1.5s ease-in-out infinite alternate;
 }
 
-/* Анімація “поп” + паріння */
+/* Анімація “поп” + легке паріння */
 @keyframes pop {
   0% {
     transform: scale(0.2);
@@ -161,13 +169,15 @@ body {
 
 @media (max-width: 420px) {
   .wheel-wrap {
-    width: 300px;
-    height: 300px;
+    width: 340px;
+    height: 340px;
   }
 
   #pointer {
-    top: -22px;
-    width: 52px;
+    width: 60px;
+    margin-top: -26px;
   }
 }
+
+
 

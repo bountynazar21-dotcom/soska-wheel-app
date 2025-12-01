@@ -11,7 +11,7 @@ const res = document.getElementById("result");
 const fireworks = document.getElementById("fireworks");
 const fireworksText = document.getElementById("fireworks-text");
 
-// Порядок секторів = порядок на картинці, за годинниковою, від ВЕРХУ
+// ПРИЗИ — порядок і назви мають збігатися з config.PRIZES_WEIGHTS
 const sectors = [
   "Аромакомпозиції x5",
   "Відкривачок x10",
@@ -24,39 +24,14 @@ const sectors = [
 ];
 
 const sectorAngle = 360 / sectors.length;
-
 let spinning = false;
-let idle = true;
-let idleAngle = 0;
-let idleTimer = null;
 
-function startIdleSpin() {
-  idle = true;
-  if (idleTimer) return;
+// поточний кут поінтера (накручуваний)
+let currentRotation = 0;
 
-  idleTimer = setInterval(() => {
-    if (!idle || !pointerRotator) return;
-    idleAngle = (idleAngle + 0.5) % 360;
-    pointerRotator.style.transition = "none";
-    pointerRotator.style.transform = `rotate(${idleAngle}deg)`;
-  }, 40);
-}
-
-function stopIdleSpin() {
-  idle = false;
-  if (idleTimer) {
-    clearInterval(idleTimer);
-    idleTimer = null;
-  }
-}
-
-function showFireworks(text) {
-  if (!fireworks || !fireworksText) return;
-  fireworksText.textContent = text;
-  fireworks.classList.add("show");
-  setTimeout(() => fireworks.classList.remove("show"), 2000);
-}
-
+/**
+ * Запит до бекенда
+ */
 async function spinRequest(payload) {
   try {
     const r = await fetch("/spin", {
@@ -71,14 +46,28 @@ async function spinRequest(payload) {
   }
 }
 
+/**
+ * Показати салют із текстом призу
+ */
+function showFireworks(text) {
+  if (!fireworks || !fireworksText) return;
+  fireworksText.textContent = text;
+  fireworks.classList.add("show");
+  setTimeout(() => fireworks.classList.remove("show"), 2000);
+}
+
+/**
+ * Обробка кліку по кнопці
+ */
 btn.addEventListener("click", async () => {
   if (spinning) return;
+  if (!pointerRotator) return;
+
   spinning = true;
   btn.disabled = true;
   res.textContent = "Крутимо...";
 
-  stopIdleSpin();
-
+  // Дані юзера з Telegram WebApp (опціонально)
   let username = "unknown";
   let user_id = null;
 
@@ -92,37 +81,43 @@ btn.addEventListener("click", async () => {
   }
 
   const payload = { username, user_id };
+
+  // 1) результат з бекенда
   const { prize, repeat, message } = await spinRequest(payload);
 
-  let sectorIndex = sectors.findIndex((name) => name === prize);
+  // 2) визначаємо сектор
+  let sectorIndex = sectors.indexOf(prize);
   if (sectorIndex === -1) {
     sectorIndex = Math.floor(Math.random() * sectors.length);
   }
 
-  const targetAngle = sectorIndex * sectorAngle + sectorAngle / 2;
-  const extraSpins = 5;
-  const finalRotation = 360 * extraSpins + targetAngle;
+  const sectorCenter = sectorIndex * sectorAngle + sectorAngle / 2;
 
-  if (!pointerRotator) {
-    console.error("pointer-rotator not found");
-    res.textContent = prize;
-    spinning = false;
-    btn.disabled = false;
-    startIdleSpin();
-    return;
-  }
+  // 3) скільки вже "стоїть" поінтер по куту
+  const normalizedCurrent = ((currentRotation % 360) + 360) % 360;
 
-  // фіксуємо поточний idle-кут
+  // на який кут треба стати, щоб поінтер дивився на центр сектора
+  const deltaToSector = ((sectorCenter - normalizedCurrent) + 360) % 360;
+
+  // рандомні додаткові повні обороти (4–6)
+  const extraSpins = 4 + Math.floor(Math.random() * 3); // 4,5,6
+
+  const deltaRotation = extraSpins * 360 + deltaToSector;
+  const targetRotation = currentRotation + deltaRotation;
+
+  // скидаємо попередню анімацію
   pointerRotator.style.transition = "none";
-  pointerRotator.style.transform = `rotate(${idleAngle}deg)`;
+  pointerRotator.style.transform = `rotate(${currentRotation}deg)`;
 
+  // запускаємо плавну крутку
   requestAnimationFrame(() => {
-    pointerRotator.style.transition = "transform 4s cubic-bezier(.33,1,.68,1)";
-    pointerRotator.style.transform = `rotate(${finalRotation}deg)`;
+    pointerRotator.style.transition =
+      "transform 4s cubic-bezier(.33, 1, .68, 1)";
+    pointerRotator.style.transform = `rotate(${targetRotation}deg)`;
   });
 
-  const onFinish = () => {
-    idleAngle = finalRotation % 360;
+  const onEnd = () => {
+    currentRotation = targetRotation; // запамʼятали новий кут
 
     if (repeat) {
       res.textContent = `${message} Ваш приз: ${prize}`;
@@ -134,13 +129,8 @@ btn.addEventListener("click", async () => {
 
     spinning = false;
     btn.disabled = false;
-
-    pointerRotator.removeEventListener("transitionend", onFinish);
-    startIdleSpin();
+    pointerRotator.removeEventListener("transitionend", onEnd);
   };
 
-  pointerRotator.addEventListener("transitionend", onFinish, { once: true });
+  pointerRotator.addEventListener("transitionend", onEnd);
 });
-
-// запускаємо ідл-обертання поінтера
-startIdleSpin();
