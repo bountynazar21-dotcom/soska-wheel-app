@@ -3,101 +3,98 @@
   --purple: #7b45ff;
 }
 
-/* ===== БАЗА: фон + центрування ===== */
-
+/* Повний фон під скріни, як у тебе */
 body {
   margin: 0;
-  font-family: Inter, Arial, sans-serif;
-
-  /* ФОН: твій bg.png */
-  background: #050315 url("assets/bg.png?v=2") center/cover no-repeat fixed;
-
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter",
+    Arial, sans-serif;
+  height: 100vh;
+  background: #000;
+  background-image: url("assets/bg.png?v=3");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   color: #fff;
 }
 
-/* Прозорий контейнер, без темного блоку */
+/* Головний контейнер (без темної карточки) */
 .app {
   width: 100%;
   max-width: 480px;
-  padding: 16px 12px 24px;
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  box-sizing: border-box;
   text-align: center;
-  background: transparent;
-  backdrop-filter: none;
-  box-shadow: none;
-  border-radius: 0;
 }
 
+/* Тайтл зверху */
 .brand {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  margin-bottom: 12px;
+  margin: 12px 0 20px;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
 }
 
-/* ===== КОЛЕСО ===== */
-
+/* Обгортка колеса */
 .wheel-wrap {
   position: relative;
-  width: 420px;   /* 🔥 збільшене колесо */
-  height: 420px;
-  margin: 0 auto 18px;
+  width: min(80vw, 360px);
+  margin: 0 auto 16px;
 }
 
+/* Контейнер 1:1 для PNG-колеса */
 .wheel-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 1 / 1; /* завжди квадрат */
+  margin: 0 auto;
 }
 
 /* PNG-колесо */
 #wheel {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   display: block;
 }
 
-/* Ротатор поінтера — крутиться навколо центра */
+/* Контейнер поінтера — крутимо його JS-ом */
 .pointer-rotator {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0; /* такий самий розмір, як колесо */
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* поінтер виходить з центра вгору */
-  transform-origin: 50% 50%;
+  align-items: flex-start; /* поінтер виходить зверху */
   pointer-events: none;
+  transform-origin: 50% 50%; /* обертання навколо центру колеса */
 }
 
-/* Сам поінтер (зелений трикутник) */
-#pointer {
-  width: 72px;
-  margin-top: -32px; /* трохи вище краю колеса, щоб вперся у рамку */
+/* Сам зелений трикутник */
+.pointer {
+  width: 70px;
+  transform: translateY(-32%); /* трохи виносимо назовні кола */
 }
 
-/* ===== КНОПКА + РЕЗУЛЬТАТ ===== */
-
+/* Кнопка "Крутити" */
 .spin-btn {
-  margin-top: 8px;
-  padding: 12px 18px;
-  border-radius: 10px;
+  margin-top: 18px;
+  padding: 12px 22px;
+  border-radius: 14px;
   border: none;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   background: linear-gradient(90deg, var(--purple), var(--green));
   color: #fff;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
   cursor: pointer;
-  transition: transform 0.08s ease-out, box-shadow 0.08s ease-out;
+  transition:
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out,
+    opacity 0.2s ease-out;
 }
 
 .spin-btn:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.7);
 }
 
 .spin-btn:disabled {
@@ -105,14 +102,15 @@ body {
   cursor: default;
 }
 
+/* Текст під кнопкою */
 .result {
-  margin-top: 10px;
+  margin-top: 14px;
   font-weight: 700;
   min-height: 22px;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.9);
 }
 
-/* ===== ОВЕРЛЕЙ САЛЮТУ ===== */
-
+/* Оверлей салюту */
 .fireworks {
   position: fixed;
   inset: 0;
@@ -131,16 +129,23 @@ body {
 
 #fireworks-text {
   color: #fff;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  padding: 16px 24px;
-  border-radius: 16px;
-  background: radial-gradient(circle at 20% 20%, #ffeb3b, #ff4081, #651fff);
-  box-shadow: 0 0 32px rgba(0, 0, 0, 0.6);
-  animation: pop 0.8s ease-out, float 1.5s ease-in-out infinite alternate;
+  padding: 14px 22px;
+  border-radius: 18px;
+  background: radial-gradient(
+    circle at 20% 20%,
+    #ffeb3b,
+    #ff4081,
+    #651fff
+  );
+  box-shadow: 0 0 32px rgba(0, 0, 0, 0.7);
+  animation:
+    pop 0.8s ease-out,
+    float 1.5s ease-in-out infinite alternate;
 }
 
-/* Анімація “поп” + легке паріння */
+/* Анімація “поп” */
 @keyframes pop {
   0% {
     transform: scale(0.2);
@@ -156,6 +161,7 @@ body {
   }
 }
 
+/* Легке “паріння” */
 @keyframes float {
   0% {
     transform: translateY(0);
@@ -165,17 +171,19 @@ body {
   }
 }
 
-/* ===== АДАПТИВ ДЛЯ МОБІЛКИ ===== */
-
-@media (max-width: 420px) {
-  .wheel-wrap {
-    width: 340px;
-    height: 340px;
+/* Трохи адаптивності */
+@media (max-width: 380px) {
+  .brand {
+    font-size: 20px;
   }
 
-  #pointer {
-    width: 60px;
-    margin-top: -26px;
+  .spin-btn {
+    width: 90%;
+    font-size: 16px;
+  }
+
+  #fireworks-text {
+    font-size: 18px;
   }
 }
 

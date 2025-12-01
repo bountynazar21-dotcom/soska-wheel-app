@@ -1,38 +1,45 @@
 <!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Soska bar x Punch – Колесо фортуни</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <link rel="stylesheet" href="style.css?v=3" />
 </head>
 <body>
   <div class="app">
     <h1 class="brand">Soska bar x Punch</h1>
 
+    <!-- Блок колеса -->
     <div class="wheel-wrap">
       <div class="wheel-container">
-        <!-- статичне PNG-колесо -->
-        <img id="wheel" src="assets/wheel.png?v=3" alt="Wheel">
+        <!-- Статичне PNG-колесо з прозорим фоном -->
+        <img id="wheel" src="assets/wheel.png?v=3" alt="Wheel" />
 
-        <!-- ротатор поінтера: він крутиться в JS -->
+        <!-- Поінтер, який ми крутимо навколо центра колеса -->
         <div id="pointer-rotator" class="pointer-rotator">
-          <img id="pointer" src="assets/pointer.svg?v=3" alt="Pointer">
+          <img
+            src="assets/pointer.svg?v=3"
+            alt="Pointer"
+            class="pointer"
+          />
         </div>
       </div>
     </div>
 
+    <!-- Кнопка + текст результату -->
     <button id="spinBtn" class="spin-btn">🎡 Крутити</button>
     <p id="result" class="result"></p>
   </div>
 
-  <!-- оверлей салюту -->
+  <!-- Оверлей салюту -->
   <div id="fireworks" class="fireworks">
     <div id="fireworks-text"></div>
   </div>
 
-  <script src="wheel.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="wheel.js?v=3"></script>
 </body>
 </html>
 
