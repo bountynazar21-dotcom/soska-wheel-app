@@ -3,21 +3,21 @@
   --purple: #7b45ff;
 }
 
-/* Повний фон під скріни, як у тебе */
+/* Фон як у макеті */
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter",
     Arial, sans-serif;
   height: 100vh;
   background: #000;
-  background-image: url("assets/bg.png?v=3");
+  background-image: url("assets/bg.png?v=4");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   color: #fff;
 }
 
-/* Головний контейнер (без темної карточки) */
+/* Контент по центру, без чорного блоку */
 .app {
   width: 100%;
   max-width: 480px;
@@ -27,27 +27,26 @@ body {
   text-align: center;
 }
 
-/* Тайтл зверху */
+/* Заголовок */
 .brand {
   font-size: 24px;
   font-weight: 700;
-  margin: 12px 0 20px;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+  margin: 8px 0 14px;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.9);
 }
 
-/* Обгортка колеса */
+/* Блок колеса */
 .wheel-wrap {
   position: relative;
-  width: min(80vw, 360px);
-  margin: 0 auto 16px;
+  width: min(88vw, 420px); /* більше коло на мобілках */
+  margin: 0 auto 10px;
 }
 
-/* Контейнер 1:1 для PNG-колеса */
+/* Контейнер 1:1 під PNG */
 .wheel-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1; /* завжди квадрат */
-  margin: 0 auto;
+  aspect-ratio: 1 / 1;
 }
 
 /* PNG-колесо */
@@ -57,24 +56,24 @@ body {
   display: block;
 }
 
-/* Контейнер поінтера — крутимо його JS-ом */
+/* Обертання поінтера навколо центра колеса */
 .pointer-rotator {
   position: absolute;
-  inset: 0; /* такий самий розмір, як колесо */
+  inset: 0;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* поінтер виходить зверху */
+  align-items: flex-start;
   pointer-events: none;
-  transform-origin: 50% 50%; /* обертання навколо центру колеса */
+  transform-origin: 50% 50%;
 }
 
 /* Сам зелений трикутник */
 .pointer {
-  width: 70px;
-  transform: translateY(-32%); /* трохи виносимо назовні кола */
+  width: 80px;
+  transform: translateY(-32%);
 }
 
-/* Кнопка "Крутити" */
+/* Кнопка */
 .spin-btn {
   margin-top: 18px;
   padding: 12px 22px;
@@ -171,7 +170,7 @@ body {
   }
 }
 
-/* Трохи адаптивності */
+/* Адаптив */
 @media (max-width: 380px) {
   .brand {
     font-size: 20px;
@@ -186,6 +185,7 @@ body {
     font-size: 18px;
   }
 }
+
 
 
 

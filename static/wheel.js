@@ -14,28 +14,25 @@ const fireworksText = document.getElementById("fireworks-text");
 let spinning = false;
 
 /**
- * Порядок секторів ПО КОЛУ, починаючи з ВЕРХУ (12:00)
- * і далі за годинниковою стрілкою.
- * ТЕКСТИ МАЮТЬ СПІВПАДАТИ з PRIZES_WEIGHTS у config.py
+ * Той самий порядок, що й у PRIZES_WEIGHTS у config.py:
+ * 0 – верхній сектор, далі за годинниковою.
  */
 const sectors = [
-  { label: "Аромакомпозиції x5" },
-  { label: "Відкривачок x10" },
-  { label: "Ланцюжок + кліп-холдер x6" },
-  { label: "Стікери + ручка x20" },
-  { label: "Павучки x45" },
-  { label: "Стрічки + пахучки x30" },
-  { label: "Стрічки x55" },
-  { label: "Стікери x70" }
+  "Відкривачок x10",
+  "Ланцюжок + кліп-холдер x6",
+  "Стікери + ручка x20",
+  "Стрічки + пахучки x30",
+  "Павучки x45",
+  "Стрічки x55",
+  "Стікери x70",
+  "Аромакомпозиції x5"
 ];
 
-// кут одного сектора
 const SECTOR_ANGLE = 360 / sectors.length;
-
-// якщо поінтер трохи “зʼїхав” між секторами – можна змінити це значення
+// якщо поінтер трохи не по центру сектора — можна підкрутити
 const ANGLE_OFFSET = 0;
 
-/** Запит до бекенда */
+/** запит до бекенда */
 async function spinRequest(payload) {
   try {
     const r = await fetch("/spin", {
@@ -63,7 +60,6 @@ btn.addEventListener("click", async () => {
   btn.disabled = true;
   res.textContent = "Крутимо...";
 
-  // Дані юзера з Telegram WebApp (опціонально)
   let username = "unknown";
   let user_id = null;
 
@@ -78,25 +74,34 @@ btn.addEventListener("click", async () => {
 
   const payload = { username, user_id };
 
-  // 1) Отримуємо приз з бекенда
-  const { prize, repeat, message } = await spinRequest(payload);
+  // 1) тягнемо результат із бекенда
+  const data = await spinRequest(payload);
+  const { prize, sector_index, repeat, message } = data;
 
-  // 2) Знаходимо сектор з таким призом
-  let sectorIndex = sectors.findIndex((s) => s.label === prize);
+  // 2) визначаємо індекс сектора
+  let sectorIndex = null;
 
-  if (sectorIndex === -1) {
-    console.warn("Prize not matched to sectors, using random sector:", prize);
-    sectorIndex = Math.floor(Math.random() * sectors.length);
+  if (typeof sector_index === "number" && sector_index >= 0) {
+    sectorIndex = sector_index % sectors.length;
+  } else {
+    // fallback: шукаємо по тексту
+    const idx = sectors.indexOf(prize);
+    if (idx !== -1) {
+      sectorIndex = idx;
+    } else {
+      sectorIndex = Math.floor(Math.random() * sectors.length);
+      console.warn("Prize not matched, using random sector:", prize);
+    }
   }
 
-  // Центр сектора, куди має дивитися поінтер
+  // центр сектора, куди має дивитись поінтер
   const sectorCenterAngle = sectorIndex * SECTOR_ANGLE + ANGLE_OFFSET;
 
-  // Додаємо кілька повних обертів
-  const extraSpins = 3 + Math.floor(Math.random() * 3); // 3..5 обертів
+  // кілька повних обертів + сектор
+  const extraSpins = 3 + Math.floor(Math.random() * 3); // 3..5
   const finalDeg = extraSpins * 360 + sectorCenterAngle;
 
-  // Скидаємо старий transition, щоб не було ривків
+  // скидаємо старий transition
   pointerRotator.style.transition = "none";
 
   requestAnimationFrame(() => {
@@ -109,14 +114,12 @@ btn.addEventListener("click", async () => {
     if (e.target !== pointerRotator) return;
     pointerRotator.removeEventListener("transitionend", onEnd);
 
-    // Текст під кнопкою
     if (repeat) {
       res.textContent = `${message} Ваш приз: ${prize}`;
     } else {
       res.textContent = `Вітаємо! Ви виграли: ${prize}`;
     }
 
-    // Салют з тим самим призом
     showFireworks(prize);
 
     spinning = false;
