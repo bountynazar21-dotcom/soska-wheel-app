@@ -9,12 +9,11 @@ APP_BASE_URL = os.getenv(
 # Токен бота
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# WebApp URL (колесо)
+# WebApp URL (правильний шлях!)
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/assets/index.html?v=1",
+    f"{APP_BASE_URL}/static/index.html?v=2"
 )
-
 
 # Адміни
 ADMINS: set[int] = {
@@ -22,7 +21,7 @@ ADMINS: set[int] = {
     5480082089,
 }
 
-# Призи
+# Призи + ваги (шанс випадіння)
 PRIZES_WEIGHTS = [
     ("Аромакомпозиції x5", 5),
     ("Відкривачок x10", 5),
@@ -33,4 +32,5 @@ PRIZES_WEIGHTS = [
     ("Стікери x70", 25),
     ("Стрічки + пахучки x30", 25),
 ]
+
 
