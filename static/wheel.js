@@ -27,9 +27,9 @@ const sectors = [
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// pointer.svg дивиться вниз.
-// Якщо буде маленький зсув — пробуй 175 або 185.
-const ANGLE_OFFSET = 180;
+// SVG-стрілка дивиться вниз, а стартова позиція зверху.
+// Цим значенням потім можна тонко калібрувати: 180, 185, 175.
+const POINTER_OFFSET = 180;
 
 async function spinRequest(payload) {
   try {
@@ -44,7 +44,9 @@ async function spinRequest(payload) {
     console.error(e);
     return {
       prize: "Помилка. Спробуй ще раз пізніше.",
-      sector_index: 0
+      sector_index: 0,
+      repeat: false,
+      message: ""
     };
   }
 }
@@ -58,6 +60,10 @@ function showFireworks(text) {
   setTimeout(() => {
     fireworks.classList.remove("show");
   }, 2000);
+}
+
+function normalizeAngle(angle) {
+  return ((angle % 360) + 360) % 360;
 }
 
 btn.addEventListener("click", async () => {
@@ -81,49 +87,40 @@ btn.addEventListener("click", async () => {
     user_id = u.id;
   }
 
-  const payload = { username, user_id };
-
-  const data = await spinRequest(payload);
+  const data = await spinRequest({ username, user_id });
   const { prize, sector_index, repeat, message } = data;
 
-  let sectorIndex = null;
+  let sectorIndex = 0;
 
   if (typeof sector_index === "number" && sector_index >= 0) {
     sectorIndex = sector_index % sectors.length;
   } else {
     const idx = sectors.indexOf(prize);
-
-    if (idx !== -1) {
-      sectorIndex = idx;
-    } else {
-      sectorIndex = 0;
-      console.warn("Prize not matched, using sector 0:", prize);
-    }
+    sectorIndex = idx !== -1 ? idx : 0;
+    console.warn("Prize not matched, using fallback sector:", prize);
   }
 
-  const sectorCenterAngle =
-    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + ANGLE_OFFSET;
+  // Центр потрібного сектора.
+  const targetAngle =
+    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + POINTER_OFFSET;
 
-  const extraSpins = 4 + Math.floor(Math.random() * 2);
+  const extraSpins = 5;
+  const baseRotation = normalizeAngle(currentRotation);
 
-  const baseRotation = ((currentRotation % 360) + 360) % 360;
-  let delta = sectorCenterAngle - baseRotation;
+  let delta = normalizeAngle(targetAngle) - baseRotation;
+  if (delta < 0) delta += 360;
 
-  if (delta < 0) {
-    delta += 360;
-  }
-
-  const finalDeg = currentRotation + extraSpins * 360 + delta;
+  const finalDeg = Math.round(currentRotation + extraSpins * 360 + delta);
   currentRotation = finalDeg;
 
   pointerRotator.style.transition = "none";
-  pointerRotator.style.transform = `rotate(${baseRotation}deg)`;
+  pointerRotator.style.transform = `rotate(${Math.round(baseRotation)}deg) translateZ(0)`;
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       pointerRotator.style.transition =
-        "transform 4s cubic-bezier(.33,1,.68,1)";
-      pointerRotator.style.transform = `rotate(${Math.round(finalDeg)}deg)`;
+        "transform 4.2s cubic-bezier(0.16, 1, 0.3, 1)";
+      pointerRotator.style.transform = `rotate(${finalDeg}deg) translateZ(0)`;
     });
   });
 
@@ -132,11 +129,9 @@ btn.addEventListener("click", async () => {
 
     pointerRotator.removeEventListener("transitionend", onEnd);
 
-    if (repeat) {
-      res.textContent = `${message || ""} Ваш приз: ${prize}`;
-    } else {
-      res.textContent = `Вітаємо! Ви виграли: ${prize}`;
-    }
+    res.textContent = repeat
+      ? `${message || "Ви вже крутили колесо."} Ваш приз: ${prize}`
+      : `Вітаємо! Ви виграли: ${prize}`;
 
     showFireworks(prize);
 

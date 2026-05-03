@@ -60,22 +60,21 @@ body {
 .pointer-rotator {
   position: absolute;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
   pointer-events: none;
   transform-origin: 50% 50%;
-
   will-change: transform;
-  transform: translateZ(0);
   backface-visibility: hidden;
+  z-index: 5;
 }
 
-/* Сам зелений трикутник */
 .pointer {
+  position: absolute;
+  left: 50%;
+  top: 0;
   width: 68px;
-  transform: translateY(-14%);
-  filter: drop-shadow(0 0 7px #00ff66);
+  transform: translateX(-50%) translateY(-6%);
+  filter: drop-shadow(0 0 8px #00ff66);
+  backface-visibility: hidden;
 }
 
 /* Кнопка */
