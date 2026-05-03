@@ -12,20 +12,24 @@ SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
+class Lead(Base):
+    __tablename__ = "leads"
+
+    id = Column(Integer, primary_key=True, index=True)  # заявка №1, №2, №3...
+    username = Column(String, nullable=False)
+    user_id = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    check_photo_id = Column(String, nullable=False)
+    datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+
 class Spin(Base):
     __tablename__ = "spins"
 
     id = Column(Integer, primary_key=True, index=True)
-
     username = Column(String, nullable=False)
     user_id = Column(String, unique=True, index=True, nullable=False)
-
     check_number = Column(String, nullable=True)
-
     prize = Column(String, nullable=False)
-
-    datetime = Column(
-        DateTime,
-        default=datetime.datetime.utcnow,
-        nullable=False,
-    )
+    datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)

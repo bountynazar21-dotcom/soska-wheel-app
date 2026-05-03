@@ -1,5 +1,4 @@
 import logging
-import time
 
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import CommandStart
@@ -14,7 +13,8 @@ from aiogram.types import (
 )
 from aiogram.exceptions import TelegramAPIError
 
-from config import BOT_TOKEN, WEBAPP_URL, ADMINS
+from database import SessionLocal, Lead
+from config import BOT_TOKEN, WEBAPP_URL
 
 bot: Bot | None = None
 dp: Dispatcher | None = None
@@ -91,42 +91,47 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 
     data = await state.get_data()
     check_photo_id = data.get("check_photo_id")
-    name = data.get("name")
+    name = data.get("name") or "-"
 
-    # ✅ стабільний унікальний номер (timestamp)
-    lead_no = int(time.time())
+    user_id = str(message.from_user.id)
 
-    caption_lines = [
-        f"Нова заявка №{lead_no}",
-        "",
-        f"Імʼя: {name or '-'}",
-        f"Телефон: {phone or '-'}",
-    ]
-
-    if message.from_user.username:
-        caption_lines.append(f"Telegram: @{message.from_user.username}")
-    else:
-        caption_lines.append(f"User ID: {message.from_user.id}")
-
-    caption_lines.extend(
-        [
-            "",
-            f"(внутрішній ID: {message.from_user.id}_{lead_no})",
-        ]
+    username = (
+        message.from_user.username
+        or f"{message.from_user.first_name or ''} {message.from_user.last_name or ''}".strip()
+        or "user"
     )
 
-    caption = "\n".join(caption_lines)
+    db = SessionLocal()
 
-    if check_photo_id:
-        for admin_id in ADMINS:
-            try:
-                await bot.send_photo(
-                    chat_id=admin_id,
-                    photo=check_photo_id,
-                    caption=caption,
-                )
-            except TelegramAPIError as e:
-                logging.error(f"Failed to send lead to admin {admin_id}: {e}")
+    try:
+        existing_lead = db.query(Lead).filter(Lead.user_id == user_id).first()
+
+        if existing_lead:
+            existing_lead.username = str(username)
+            existing_lead.name = str(name)
+            existing_lead.phone = str(phone)
+            existing_lead.check_photo_id = str(check_photo_id)
+        else:
+            lead = Lead(
+                username=str(username),
+                user_id=user_id,
+                name=str(name),
+                phone=str(phone),
+                check_photo_id=str(check_photo_id),
+            )
+            db.add(lead)
+
+        db.commit()
+
+    except Exception as e:
+        logging.error(f"Failed to save lead: {e}")
+        await message.answer(
+            "Сталася помилка під час збереження заявки. Спробуй ще раз /start"
+        )
+        return
+
+    finally:
+        db.close()
 
     await message.answer(
         "Все, ти в грі! 🎉\nНатискай кнопку нижче, щоб відкрити колесо фортуни:",
@@ -165,5 +170,6 @@ async def run_bot():
 
 async def shutdown_bot():
     global bot
+
     if bot:
         await bot.session.close()
