@@ -123,7 +123,7 @@ btn.addEventListener("click", async () => {
     requestAnimationFrame(() => {
       pointerRotator.style.transition =
         "transform 4s cubic-bezier(.33,1,.68,1)";
-      pointerRotator.style.transform = `rotate(${finalDeg}deg)`;
+      pointerRotator.style.transform = `rotate(${Math.round(finalDeg)}deg)`;
     });
   });
 

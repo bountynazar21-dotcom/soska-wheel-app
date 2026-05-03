@@ -65,12 +65,17 @@ body {
   align-items: flex-start;
   pointer-events: none;
   transform-origin: 50% 50%;
+
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 /* Сам зелений трикутник */
 .pointer {
-  width: 60px;
-  transform: translateY(-28%);
+  width: 68px;
+  transform: translateY(-14%);
+  filter: drop-shadow(0 0 7px #00ff66);
 }
 
 /* Кнопка */
