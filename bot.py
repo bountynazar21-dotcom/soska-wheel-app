@@ -1,5 +1,5 @@
 import logging
-from itertools import count
+import time
 
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import CommandStart
@@ -20,14 +20,9 @@ bot: Bot | None = None
 dp: Dispatcher | None = None
 
 router = Router()
-# простий послідовний номер заявки (починається з 1, при рестарті бота лічильник скинеться)
-lead_counter = count(1)
 
 
 def build_webapp_keyboard() -> InlineKeyboardMarkup:
-    """
-    Інлайн-клавіатура з кнопкою відкриття WebApp колеса.
-    """
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -48,9 +43,6 @@ class Registration(StatesGroup):
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
-    """
-    Старт: просимо надіслати фото чеку.
-    """
     await state.clear()
     await message.answer(
         "Привіт! 👋\n\nНадішли, будь ласка, *фото чеку*.",
@@ -62,9 +54,6 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
 
 @router.message(Registration.waiting_for_check_photo, F.photo)
 async def process_check_photo(message: Message, state: FSMContext) -> None:
-    """
-    Отримали фото чеку → зберегли file_id → питаємо імʼя.
-    """
     file_id = message.photo[-1].file_id
     await state.update_data(check_photo_id=file_id)
 
@@ -97,9 +86,6 @@ async def process_name(message: Message, state: FSMContext) -> None:
 
 @router.message(Registration.waiting_for_phone, F.text)
 async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
-    """
-    Отримали телефон → збираємо всі дані → шлемо адмінам + даємо кнопку WebApp.
-    """
     phone = message.text.strip()
     await state.update_data(phone=phone)
 
@@ -107,10 +93,9 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
     check_photo_id = data.get("check_photo_id")
     name = data.get("name")
 
-    # Генеруємо послідовний номер заявки
-    lead_no = next(lead_counter)
+    # ✅ стабільний унікальний номер (timestamp)
+    lead_no = int(time.time())
 
-    # Збираємо текст для адміна
     caption_lines = [
         f"Нова заявка №{lead_no}",
         "",
@@ -123,7 +108,6 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
     else:
         caption_lines.append(f"User ID: {message.from_user.id}")
 
-    # “Невидимий” внутрішній номер (інвіз)
     caption_lines.extend(
         [
             "",
@@ -133,7 +117,6 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 
     caption = "\n".join(caption_lines)
 
-    # Відправляємо всім адмінам фото + дані
     if check_photo_id:
         for admin_id in ADMINS:
             try:
@@ -145,7 +128,6 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
             except TelegramAPIError as e:
                 logging.error(f"Failed to send lead to admin {admin_id}: {e}")
 
-    # Даємо юзеру WebApp-кнопку
     await message.answer(
         "Все, ти в грі! 🎉\nНатискай кнопку нижче, щоб відкрити колесо фортуни:",
         reply_markup=build_webapp_keyboard(),

@@ -15,13 +15,8 @@ logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
 
-# Статика
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Створення таблиць БД
-Base.metadata.create_all(bind=engine)
-
-# Маршрути
 app.include_router(spin_router)
 app.include_router(admin_router)
 
@@ -29,7 +24,9 @@ app.include_router(admin_router)
 @app.on_event("startup")
 async def startup():
     Base.metadata.create_all(bind=engine)
+
     asyncio.create_task(run_bot())
+
     logging.info("Application startup complete")
 
 
@@ -39,25 +36,20 @@ async def shutdown():
     logging.info("Application shutdown complete")
 
 
-# ======== HEALTHCHECK ========
-
 @app.get("/ping")
 async def ping():
     return JSONResponse({"status": "ok"})
 
 
-# ======== ROOT → STATIC ========
-
 @app.get("/")
 async def root():
-    # щоб при вході на домен відкривалось колесо
-    return RedirectResponse(url="/static/assets/index.html?v=1")
+    return RedirectResponse(url="/static/index.html?v=4")
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(os.environ.get("PORT", 8000))  # Railway підставляє свій PORT
+    port = int(os.environ.get("PORT", 8000))
 
     uvicorn.run(
         "main:app",

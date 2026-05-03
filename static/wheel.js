@@ -12,11 +12,8 @@ const fireworks = document.getElementById("fireworks");
 const fireworksText = document.getElementById("fireworks-text");
 
 let spinning = false;
+let currentRotation = 0;
 
-/**
- * Той самий порядок, що й у PRIZES_WEIGHTS у config.py:
- * 0 – верхній сектор, далі за годинниковою.
- */
 const sectors = [
   "Відкривачок x10",
   "Ланцюжок + кліп-холдер x6",
@@ -29,10 +26,11 @@ const sectors = [
 ];
 
 const SECTOR_ANGLE = 360 / sectors.length;
-// якщо поінтер трохи не по центру сектора — можна підкрутити
-const ANGLE_OFFSET = 0;
 
-/** запит до бекенда */
+// pointer.svg дивиться вниз.
+// Якщо буде маленький зсув — пробуй 175 або 185.
+const ANGLE_OFFSET = 180;
+
 async function spinRequest(payload) {
   try {
     const r = await fetch("/spin", {
@@ -40,22 +38,31 @@ async function spinRequest(payload) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+
     return await r.json();
   } catch (e) {
     console.error(e);
-    return { prize: "Помилка. Спробуй ще раз пізніше." };
+    return {
+      prize: "Помилка. Спробуй ще раз пізніше.",
+      sector_index: 0
+    };
   }
 }
 
 function showFireworks(text) {
   if (!fireworks || !fireworksText) return;
+
   fireworksText.textContent = `🎉 ${text} 🎉`;
   fireworks.classList.add("show");
-  setTimeout(() => fireworks.classList.remove("show"), 2000);
+
+  setTimeout(() => {
+    fireworks.classList.remove("show");
+  }, 2000);
 }
 
 btn.addEventListener("click", async () => {
   if (spinning) return;
+
   spinning = true;
   btn.disabled = true;
   res.textContent = "Крутимо...";
@@ -65,57 +72,68 @@ btn.addEventListener("click", async () => {
 
   if (tg?.initDataUnsafe?.user) {
     const u = tg.initDataUnsafe.user;
+
     username =
       u.username ||
       `${u.first_name || ""} ${u.last_name || ""}`.trim() ||
       "user";
+
     user_id = u.id;
   }
 
   const payload = { username, user_id };
 
-  // 1) тягнемо результат із бекенда
   const data = await spinRequest(payload);
   const { prize, sector_index, repeat, message } = data;
 
-  // 2) визначаємо індекс сектора
   let sectorIndex = null;
 
   if (typeof sector_index === "number" && sector_index >= 0) {
     sectorIndex = sector_index % sectors.length;
   } else {
-    // fallback: шукаємо по тексту
     const idx = sectors.indexOf(prize);
+
     if (idx !== -1) {
       sectorIndex = idx;
     } else {
-      sectorIndex = Math.floor(Math.random() * sectors.length);
-      console.warn("Prize not matched, using random sector:", prize);
+      sectorIndex = 0;
+      console.warn("Prize not matched, using sector 0:", prize);
     }
   }
 
-  // центр сектора, куди має дивитись поінтер
-  const sectorCenterAngle = sectorIndex * SECTOR_ANGLE + ANGLE_OFFSET;
+  const sectorCenterAngle =
+    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + ANGLE_OFFSET;
 
-  // кілька повних обертів + сектор
-  const extraSpins = 3 + Math.floor(Math.random() * 3); // 3..5
-  const finalDeg = extraSpins * 360 + sectorCenterAngle;
+  const extraSpins = 4 + Math.floor(Math.random() * 2);
 
-  // скидаємо старий transition
+  const baseRotation = ((currentRotation % 360) + 360) % 360;
+  let delta = sectorCenterAngle - baseRotation;
+
+  if (delta < 0) {
+    delta += 360;
+  }
+
+  const finalDeg = currentRotation + extraSpins * 360 + delta;
+  currentRotation = finalDeg;
+
   pointerRotator.style.transition = "none";
+  pointerRotator.style.transform = `rotate(${baseRotation}deg)`;
 
   requestAnimationFrame(() => {
-    pointerRotator.style.transition =
-      "transform 4s cubic-bezier(.33,1,.68,1)";
-    pointerRotator.style.transform = `rotate(${finalDeg}deg)`;
+    requestAnimationFrame(() => {
+      pointerRotator.style.transition =
+        "transform 4s cubic-bezier(.33,1,.68,1)";
+      pointerRotator.style.transform = `rotate(${finalDeg}deg)`;
+    });
   });
 
   const onEnd = (e) => {
     if (e.target !== pointerRotator) return;
+
     pointerRotator.removeEventListener("transitionend", onEnd);
 
     if (repeat) {
-      res.textContent = `${message} Ваш приз: ${prize}`;
+      res.textContent = `${message || ""} Ваш приз: ${prize}`;
     } else {
       res.textContent = `Вітаємо! Ви виграли: ${prize}`;
     }
@@ -128,4 +146,3 @@ btn.addEventListener("click", async () => {
 
   pointerRotator.addEventListener("transitionend", onEnd);
 });
-
