@@ -41,7 +41,7 @@ const sectorAngles = [
 ];
 
 // Глобальна підкрутка під твою PNG-картинку.
-const POINTER_OFFSET = 180 - SECTOR_ANGLE + 7;
+const POINTER_OFFSET = 180;
 
 async function spinRequest(payload) {
   try {
