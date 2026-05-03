@@ -27,9 +27,8 @@ const sectors = [
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// Для ідеального колеса 8 секторів:
-// 0 сектор = верхній сектор, далі за годинниковою
-const POINTER_OFFSET = 180;
+// Стрілка вже стоїть зверху і дивиться вниз на сектор
+const POINTER_OFFSET = 0;
 
 async function spinRequest(payload) {
   try {
