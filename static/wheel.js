@@ -29,7 +29,7 @@ const SECTOR_ANGLE = 360 / sectors.length;
 
 // SVG-стрілка дивиться вниз, а стартова позиція зверху.
 // Цим значенням потім можна тонко калібрувати: 180, 185, 175.
-const POINTER_OFFSET = 180;
+const POINTER_OFFSET = 180 - SECTOR_ANGLE;
 
 async function spinRequest(payload) {
   try {
