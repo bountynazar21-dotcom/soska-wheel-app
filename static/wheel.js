@@ -15,32 +15,20 @@ let spinning = false;
 let currentRotation = 0;
 
 const sectors = [
-  "Відкривачок x10",
-  "Ланцюжок + кліп-холдер x6",
-  "Стікери + ручка x20",
-  "Стрічки + пахучки x30",
-  "Павучки x45",
-  "Стрічки x55",
-  "Стікери x70",
-  "Аромакомпозиції x5"
+  "Смартфон",
+  "Ноутбук",
+  "Наушники",
+  "Велосипед",
+  "Часы",
+  "Книга",
+  "Кофе",
+  "Торт"
 ];
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// Ручні центри секторів.
-// Якщо якийсь конкретний сектор мажe — змінюй тільки його число на ±2..5.
-const sectorAngles = [
-  22.5,   // Відкривачок x10
-  67.5,   // Ланцюжок + кліп-холдер x6
-  112.5,  // Стікери + ручка x20
-  157.5,  // Стрічки + пахучки x30
-  202.5,  // Павучки x45
-  247.5,  // Стрічки x55
-  292.5,  // Стікери x70
-  337.5   // Аромакомпозиції x5
-];
-
-// Глобальна підкрутка під твою PNG-картинку.
+// Для ідеального колеса 8 секторів:
+// 0 сектор = верхній сектор, далі за годинниковою
 const POINTER_OFFSET = 180;
 
 async function spinRequest(payload) {
@@ -112,7 +100,8 @@ btn.addEventListener("click", async () => {
     console.warn("Prize not matched, using fallback sector:", prize);
   }
 
-  const targetAngle = sectorAngles[sectorIndex] + POINTER_OFFSET;
+  const targetAngle =
+    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + POINTER_OFFSET;
 
   const extraSpins = 5;
   const baseRotation = normalizeAngle(currentRotation);
