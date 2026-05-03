@@ -27,9 +27,21 @@ const sectors = [
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// SVG-стрілка дивиться вниз, а стартова позиція зверху.
-// Цим значенням потім можна тонко калібрувати: 180, 185, 175.
-const POINTER_OFFSET = 180 - SECTOR_ANGLE +7;
+// Ручні центри секторів.
+// Якщо якийсь конкретний сектор мажe — змінюй тільки його число на ±2..5.
+const sectorAngles = [
+  22.5,   // Відкривачок x10
+  67.5,   // Ланцюжок + кліп-холдер x6
+  112.5,  // Стікери + ручка x20
+  157.5,  // Стрічки + пахучки x30
+  202.5,  // Павучки x45
+  247.5,  // Стрічки x55
+  292.5,  // Стікери x70
+  337.5   // Аромакомпозиції x5
+];
+
+// Глобальна підкрутка під твою PNG-картинку.
+const POINTER_OFFSET = 180 - SECTOR_ANGLE + 7;
 
 async function spinRequest(payload) {
   try {
@@ -100,9 +112,7 @@ btn.addEventListener("click", async () => {
     console.warn("Prize not matched, using fallback sector:", prize);
   }
 
-  // Центр потрібного сектора.
-  const targetAngle =
-    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + POINTER_OFFSET;
+  const targetAngle = sectorAngles[sectorIndex] + POINTER_OFFSET;
 
   const extraSpins = 5;
   const baseRotation = normalizeAngle(currentRotation);
@@ -114,13 +124,15 @@ btn.addEventListener("click", async () => {
   currentRotation = finalDeg;
 
   pointerRotator.style.transition = "none";
-  pointerRotator.style.transform = `rotate(${Math.round(baseRotation)}deg) translateZ(0)`;
+  pointerRotator.style.transform =
+    `rotate(${Math.round(baseRotation)}deg) translateZ(0)`;
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       pointerRotator.style.transition =
         "transform 4.2s cubic-bezier(0.16, 1, 0.3, 1)";
-      pointerRotator.style.transform = `rotate(${finalDeg}deg) translateZ(0)`;
+      pointerRotator.style.transform =
+        `rotate(${finalDeg}deg) translateZ(0)`;
     });
   });
 
