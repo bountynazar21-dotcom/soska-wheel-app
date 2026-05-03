@@ -69,8 +69,8 @@ body {
 
 /* Сам зелений трикутник */
 .pointer {
-  width: 80px;
-  transform: translateY(-32%);
+  width: 60px;
+  transform: translateY(-28%);
 }
 
 /* Кнопка */
