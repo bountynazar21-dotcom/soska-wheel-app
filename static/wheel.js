@@ -25,8 +25,10 @@ const sectors = [
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// Стрілка зверху і дивиться вниз
-const POINTER_OFFSET = 0;
+// Для 6 секторів центр = +30°. 
+// Якщо PNG трохи зміщений — підкручуй POINTER_OFFSET на ±2..5.
+const SAFE_CENTER_OFFSET = SECTOR_ANGLE / 2;
+const POINTER_OFFSET = -5;
 
 async function spinRequest(payload) {
   try {
@@ -101,7 +103,7 @@ btn.addEventListener("click", async () => {
   }
 
   const targetAngle =
-    sectorIndex * SECTOR_ANGLE + SECTOR_ANGLE / 2 + POINTER_OFFSET;
+    sectorIndex * SECTOR_ANGLE + SAFE_CENTER_OFFSET + POINTER_OFFSET;
 
   const extraSpins = 5;
   const baseRotation = normalizeAngle(currentRotation);
