@@ -1,4 +1,5 @@
 import logging
+import datetime
 
 from aiogram import Bot, Dispatcher, Router, F
 from aiogram.filters import CommandStart
@@ -14,8 +15,14 @@ from aiogram.types import (
 )
 from aiogram.exceptions import TelegramAPIError
 
-from database import SessionLocal, Lead
-from config import BOT_TOKEN, WEBAPP_URL, CHANNEL_USERNAME, CHANNEL_URL
+from database import SessionLocal, Lead, Spin
+from config import (
+    BOT_TOKEN,
+    WEBAPP_URL,
+    CHANNEL_USERNAME,
+    CHANNEL_URL,
+    SPIN_COOLDOWN_DAYS,
+)
 
 bot: Bot | None = None
 dp: Dispatcher | None = None
@@ -26,6 +33,20 @@ router = Router()
 class Registration(StatesGroup):
     waiting_for_name = State()
     waiting_for_phone = State()
+
+
+def format_time_left(delta: datetime.timedelta) -> str:
+    total_seconds = int(delta.total_seconds())
+
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    if days > 0:
+        return f"{days} дн. {hours} год."
+    if hours > 0:
+        return f"{hours} год. {minutes} хв."
+    return f"{minutes} хв."
 
 
 def build_webapp_keyboard() -> InlineKeyboardMarkup:
@@ -69,9 +90,45 @@ async def is_user_subscribed(bot: Bot, user_id: int) -> bool:
         return False
 
 
+def get_active_cooldown(user_id: str):
+    db = SessionLocal()
+
+    try:
+        last_spin = (
+            db.query(Spin)
+            .filter(Spin.user_id == user_id)
+            .order_by(Spin.datetime.desc())
+            .first()
+        )
+
+        if not last_spin:
+            return None
+
+        now = datetime.datetime.utcnow()
+        cooldown_until = last_spin.datetime + datetime.timedelta(days=SPIN_COOLDOWN_DAYS)
+
+        if now >= cooldown_until:
+            return None
+
+        return cooldown_until - now
+
+    finally:
+        db.close()
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
+
+    user_id = str(message.from_user.id)
+    cooldown_left = get_active_cooldown(user_id)
+
+    if cooldown_left:
+        await message.answer(
+            "Ти вже крутив колесо 🎡\n"
+            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+        )
+        return
 
     await message.answer(
         "Привіт! 👋\n\nНапиши, будь ласка, своє імʼя.",
@@ -106,10 +163,19 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
         await message.answer("Введи, будь ласка, коректний номер телефону.")
         return
 
+    user_id = str(message.from_user.id)
+    cooldown_left = get_active_cooldown(user_id)
+
+    if cooldown_left:
+        await state.clear()
+        await message.answer(
+            "Ти вже крутив колесо 🎡\n"
+            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+        )
+        return
+
     data = await state.get_data()
     name = data.get("name") or "-"
-
-    user_id = str(message.from_user.id)
 
     username = (
         message.from_user.username
@@ -163,6 +229,16 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 
 @router.callback_query(F.data == "check_subscription")
 async def check_subscription_callback(callback: CallbackQuery, bot: Bot) -> None:
+    user_id = str(callback.from_user.id)
+    cooldown_left = get_active_cooldown(user_id)
+
+    if cooldown_left:
+        await callback.message.answer(
+            "Ти вже крутив колесо 🎡\n"
+            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+        )
+        return
+
     subscribed = await is_user_subscribed(bot, callback.from_user.id)
 
     if subscribed:

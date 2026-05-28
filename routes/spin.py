@@ -1,5 +1,6 @@
 import random
 import datetime
+import logging
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -84,6 +85,28 @@ async def notify_admins(lead: Lead, prize: str, user_id_str: str, is_admin: bool
             chat_id=admin_id,
             text=caption,
         )
+
+
+async def notify_user_win(user_id_str: str, prize: str, sector_index: int, is_prank: bool):
+    if is_prank:
+        return
+
+    if sector_index == 2 or prize == "Нічого":
+        return
+
+    try:
+        bot, _ = get_bot_and_dispatcher()
+
+        await bot.send_message(
+            chat_id=int(user_id_str),
+            text=(
+                "🎉 Вітаємо!\n\n"
+                f"Твій виграш: {prize}\n\n"
+            ),
+        )
+
+    except Exception as e:
+        logging.error(f"Failed to send win message to user {user_id_str}: {e}")
 
 
 @router.post("/spin")
@@ -211,6 +234,13 @@ async def spin(request: Request):
             prize=prize,
             user_id_str=user_id_str,
             is_admin=is_admin,
+            is_prank=False,
+        )
+
+        await notify_user_win(
+            user_id_str=user_id_str,
+            prize=prize,
+            sector_index=sector_index,
             is_prank=False,
         )
 
