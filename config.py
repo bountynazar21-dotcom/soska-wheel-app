@@ -21,7 +21,7 @@ CHANNEL_USERNAME = "@soska_bar"
 CHANNEL_URL = "https://t.me/soska_bar"
 
 # Через скільки днів можна крутити знову
-SPIN_COOLDOWN_DAYS = 6
+SPIN_COOLDOWN_DAYS = 7
 
 # ПОРЯДОК СЕКТОРІВ = ЯК НА КОЛЕСІ
 # ВІД ВЕРХУ ЗА ГОДИННИКОВОЮ
