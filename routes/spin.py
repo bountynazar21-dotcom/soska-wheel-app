@@ -26,9 +26,6 @@ def format_time_left(delta: datetime.timedelta) -> str:
 
 
 def ensure_prize_stock(db):
-    """
-    Створює stock призів у БД, якщо його ще немає.
-    """
     existing_count = db.query(PrizeStock).count()
 
     if existing_count > 0:
@@ -59,6 +56,7 @@ async def spin(request: Request):
         ensure_prize_stock(db)
 
         user_id_str = str(user_id) if user_id is not None else "unknown"
+        is_admin = int(user_id_str) in ADMINS if user_id_str.isdigit() else False
         now = datetime.datetime.utcnow()
 
         lead = db.query(Lead).filter(Lead.user_id == user_id_str).first()
@@ -67,7 +65,7 @@ async def spin(request: Request):
             return JSONResponse(
                 {
                     "prize": "Помилка",
-                    "sector_index": 3,
+                    "sector_index": 2,
                     "repeat": True,
                     "message": "Спочатку пройди реєстрацію в боті.",
                 }
@@ -80,12 +78,12 @@ async def spin(request: Request):
             .first()
         )
 
-        if last_spin:
+        if last_spin and not is_admin:
             cooldown_until = last_spin.datetime + datetime.timedelta(days=SPIN_COOLDOWN_DAYS)
 
             if now < cooldown_until:
                 time_left = cooldown_until - now
-                sector_index = 3
+                sector_index = 2
 
                 for item in PRIZES_:
                     if item["prize"] == last_spin.prize:
@@ -112,7 +110,7 @@ async def spin(request: Request):
             return JSONResponse(
                 {
                     "prize": "Нічого",
-                    "sector_index": 3,
+                    "sector_index": 2,
                     "repeat": False,
                     "message": "Призи закінчились.",
                 }
@@ -127,7 +125,7 @@ async def spin(request: Request):
         prize = selected.prize
         sector_index = selected.sector_index
 
-        if selected.stock is not None:
+        if selected.stock is not None and not is_admin:
             selected.stock -= 1
 
         row = Spin(
@@ -142,9 +140,11 @@ async def spin(request: Request):
 
         bot, _ = get_bot_and_dispatcher()
 
+        admin_note = " 🧪 ТЕСТ АДМІНА" if is_admin else ""
+
         caption = "\n".join(
             [
-                f"Нова заявка №{lead.id}",
+                f"Нова заявка №{lead.id}{admin_note}",
                 "",
                 f"Імʼя: {lead.name}",
                 f"Телефон: {lead.phone}",
@@ -152,7 +152,7 @@ async def spin(request: Request):
                 "",
                 f"🎁 Виграш: {prize}",
                 "",
-                f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
+                "⏳ Наступна прокрутка: без обмежень для адміна" if is_admin else f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
                 "",
                 f"(внутрішній ID: {lead.user_id}_{lead.id})",
             ]
