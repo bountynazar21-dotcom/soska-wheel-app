@@ -9,7 +9,7 @@ body {
     Arial, sans-serif;
   min-height: 100vh;
   background: #000;
-  background-image: url("assets/bg.png?v=22");
+  background-image: url("assets/bg.png?v=23");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -20,16 +20,21 @@ body {
 .app {
   width: 100%;
   max-width: 430px;
+  min-height: 100vh;
   margin: 0 auto;
-  padding: 8px 12px 24px;
+  padding: 18px 12px 24px;
   box-sizing: border-box;
   text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .brand {
   font-size: 28px;
   font-weight: 800;
-  margin: 2px 0 8px;
+  margin: 8px 0 18px;
   line-height: 1.1;
 
   text-shadow:
@@ -40,10 +45,8 @@ body {
 
 .wheel-wrap {
   position: relative;
-
-  width: min(80vw, 320px);
-
-  margin: 56px auto 8px;
+  width: min(84vw, 340px);
+  margin: 44px auto 12px;
 }
 
 .wheel-container {
@@ -76,19 +79,18 @@ body {
 
 .pointer {
   position: absolute;
-
   left: 50%;
   top: 0;
 
-  width: 30px;
+  width: 28px;
 
   transform:
     translateX(-50%)
-    translateY(52%);
+    translateY(58%);
 
   filter:
     drop-shadow(0 0 4px #00ff66)
-    drop-shadow(0 0 10px rgba(0,255,100,0.45));
+    drop-shadow(0 0 10px rgba(0,255,100,0.5));
 
   backface-visibility: hidden;
 }
@@ -96,17 +98,16 @@ body {
 /* ===== КНОПКА ===== */
 
 .spin-btn {
-  margin-top: 14px;
+  margin-top: 16px;
 
-  padding: 13px 24px;
+  padding: 13px 26px;
+  min-width: 190px;
 
-  min-width: 185px;
-
-  border-radius: 16px;
+  border-radius: 18px;
   border: none;
 
   font-size: 20px;
-  font-weight: 700;
+  font-weight: 800;
 
   background:
     linear-gradient(
@@ -118,7 +119,7 @@ body {
   color: #fff;
 
   box-shadow:
-    0 10px 24px rgba(0, 0, 0, 0.55);
+    0 10px 24px rgba(0, 0, 0, 0.6);
 
   cursor: pointer;
 
@@ -143,7 +144,7 @@ body {
 /* ===== РЕЗУЛЬТАТ ===== */
 
 .result {
-  margin: 14px auto 0;
+  margin: 16px auto 0;
 
   max-width: 340px;
 
@@ -239,29 +240,29 @@ body {
 @media (max-width: 390px) {
 
   .app {
-    padding: 6px 10px 18px;
+    padding: 14px 10px 20px;
   }
 
   .brand {
     font-size: 24px;
-    margin-bottom: 6px;
+    margin: 6px 0 14px;
   }
 
   .wheel-wrap {
-    width: min(78vw, 300px);
-    margin-top: 52px;
+    width: min(82vw, 315px);
+    margin-top: 38px;
   }
 
   .pointer {
-    width: 26px;
+    width: 25px;
 
     transform:
       translateX(-50%)
-      translateY(56%);
+      translateY(62%);
   }
 
   .spin-btn {
-    margin-top: 12px;
+    margin-top: 14px;
 
     font-size: 18px;
     min-width: 170px;
@@ -269,7 +270,7 @@ body {
 
   .result {
     font-size: 16px;
-    max-width: 300px;
+    max-width: 310px;
   }
 
   #fireworks-text {
@@ -279,22 +280,25 @@ body {
 
 @media (max-height: 720px) {
 
+  .app {
+    padding-top: 10px;
+  }
+
   .brand {
     font-size: 24px;
+    margin-bottom: 10px;
   }
 
   .wheel-wrap {
-    width: min(76vw, 295px);
-    margin-top: 46px;
+    width: min(78vw, 300px);
+    margin-top: 30px;
   }
 
   .spin-btn {
-    margin-top: 10px;
+    margin-top: 12px;
   }
 
   .result {
-    margin-top: 10px;
+    margin-top: 12px;
   }
 }
-
-
