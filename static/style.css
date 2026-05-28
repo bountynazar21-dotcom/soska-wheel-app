@@ -36,12 +36,19 @@ body {
   font-weight: 900;
   margin: 18px 0 28px;
   line-height: 1.1;
-  text-shadow: 0 0 12px rgba(0, 0, 0, 0.95);
+
+  text-shadow:
+    0 0 12px rgba(0, 0, 0, 0.95);
 }
+
+/* ===== КОЛЕСО ===== */
 
 .wheel-wrap {
   position: relative;
-  width: min(108vw, 450px);
+
+  /* ↓ колесо -5% */
+  width: min(103vw, 428px);
+
   margin: 0 auto 18px;
 }
 
@@ -57,13 +64,19 @@ body {
   display: block;
 }
 
+/* ===== СТРІЛКА ===== */
+
 .pointer-rotator {
   position: absolute;
   inset: 0;
+
   pointer-events: none;
+
   transform-origin: 50% 50%;
+
   will-change: transform;
   backface-visibility: hidden;
+
   z-index: 5;
 }
 
@@ -71,26 +84,48 @@ body {
   position: absolute;
   left: 50%;
   top: 0;
+
   width: 34px;
-  transform: translateX(-50%) translateY(56%);
+
+  transform:
+    translateX(-50%)
+    translateY(56%);
+
   filter:
     drop-shadow(0 0 4px #00ff66)
     drop-shadow(0 0 10px rgba(0,255,100,0.5));
+
   backface-visibility: hidden;
 }
 
+/* ===== КНОПКА ===== */
+
 .spin-btn {
   margin-top: 22px;
+
   padding: 16px 34px;
   min-width: 245px;
+
   border-radius: 22px;
   border: none;
+
   font-size: 28px;
   font-weight: 900;
-  background: linear-gradient(90deg, var(--purple), var(--green));
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--purple),
+      var(--green)
+    );
+
   color: #fff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.6);
+
   cursor: pointer;
+
   transition:
     transform 0.08s ease-out,
     box-shadow 0.08s ease-out,
@@ -99,7 +134,9 @@ body {
 
 .spin-btn:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.7);
+
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.7);
 }
 
 .spin-btn:disabled {
@@ -107,25 +144,38 @@ body {
   cursor: default;
 }
 
+/* ===== РЕЗУЛЬТАТ ===== */
+
 .result {
   margin: 18px auto 0;
+
   max-width: 360px;
+
   font-size: 20px;
   line-height: 1.3;
   font-weight: 900;
+
   min-height: 24px;
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.95);
+
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.95);
 }
+
+/* ===== ФЕЄРВЕРК ===== */
 
 .fireworks {
   position: fixed;
   inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   pointer-events: none;
+
   opacity: 0;
   transition: opacity 0.2s ease-out;
+
   z-index: 999;
 }
 
@@ -135,17 +185,24 @@ body {
 
 #fireworks-text {
   color: #fff;
+
   font-size: 22px;
   font-weight: 700;
+
   padding: 14px 22px;
+
   border-radius: 18px;
+
   background: radial-gradient(
     circle at 20% 20%,
     #ffeb3b,
     #ff4081,
     #651fff
   );
-  box-shadow: 0 0 32px rgba(0, 0, 0, 0.7);
+
+  box-shadow:
+    0 0 32px rgba(0, 0, 0, 0.7);
+
   animation:
     pop 0.8s ease-out,
     float 1.5s ease-in-out infinite alternate;
@@ -179,6 +236,7 @@ body {
 }
 
 @media (max-width: 390px) {
+
   .app {
     padding: 16px 6px 20px;
   }
@@ -189,18 +247,25 @@ body {
   }
 
   .wheel-wrap {
-    width: min(112vw, 430px);
+    /* ↓ мобілка теж -5% */
+    width: min(106vw, 408px);
+
     margin-bottom: 18px;
   }
 
   .pointer {
     width: 32px;
-    transform: translateX(-50%) translateY(58%);
+
+    transform:
+      translateX(-50%)
+      translateY(58%);
   }
 
   .spin-btn {
     margin-top: 20px;
+
     min-width: 250px;
+
     font-size: 28px;
   }
 
@@ -215,6 +280,7 @@ body {
 }
 
 @media (max-height: 720px) {
+
   .app {
     padding-top: 10px;
   }
@@ -225,7 +291,7 @@ body {
   }
 
   .wheel-wrap {
-    width: min(104vw, 400px);
+    width: min(100vw, 380px);
   }
 
   .spin-btn {

@@ -5,7 +5,14 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from database import SessionLocal, Spin, Lead, PrizeStock
-from config import PRIZES_, ADMINS, SPIN_COOLDOWN_DAYS
+from config import (
+    PRIZES_,
+    ADMINS,
+    SPIN_COOLDOWN_DAYS,
+    PRANK_USER_IDS,
+    PRANK_TEXT,
+    PRANK_SECTOR_INDEX,
+)
 from bot import get_bot_and_dispatcher
 
 router = APIRouter()
@@ -43,6 +50,42 @@ def ensure_prize_stock(db):
     db.commit()
 
 
+async def notify_admins(lead: Lead, prize: str, user_id_str: str, is_admin: bool, is_prank: bool):
+    bot, _ = get_bot_and_dispatcher()
+
+    notes = []
+    if is_admin:
+        notes.append("🧪 ТЕСТ АДМІНА")
+    if is_prank:
+        notes.append("🤣 PRANK USER")
+
+    admin_note = f" {' | '.join(notes)}" if notes else ""
+
+    caption = "\n".join(
+        [
+            f"Нова заявка №{lead.id}{admin_note}",
+            "",
+            f"Імʼя: {lead.name}",
+            f"Телефон: {lead.phone}",
+            f"Telegram: @{lead.username}" if not lead.username.isdigit() else f"User ID: {lead.user_id}",
+            "",
+            f"🎁 Результат: {prize}",
+            "",
+            "⏳ Наступна прокрутка: без обмежень для адміна"
+            if is_admin
+            else f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
+            "",
+            f"(внутрішній ID: {user_id_str}_{lead.id})",
+        ]
+    )
+
+    for admin_id in ADMINS:
+        await bot.send_message(
+            chat_id=admin_id,
+            text=caption,
+        )
+
+
 @router.post("/spin")
 async def spin(request: Request):
     data = await request.json()
@@ -56,7 +99,10 @@ async def spin(request: Request):
         ensure_prize_stock(db)
 
         user_id_str = str(user_id) if user_id is not None else "unknown"
+
         is_admin = int(user_id_str) in ADMINS if user_id_str.isdigit() else False
+        is_prank_user = int(user_id_str) in PRANK_USER_IDS if user_id_str.isdigit() else False
+
         now = datetime.datetime.utcnow()
 
         lead = db.query(Lead).filter(Lead.user_id == user_id_str).first()
@@ -83,21 +129,43 @@ async def spin(request: Request):
 
             if now < cooldown_until:
                 time_left = cooldown_until - now
-                sector_index = 2
-
-                for item in PRIZES_:
-                    if item["prize"] == last_spin.prize:
-                        sector_index = item["sector_index"]
-                        break
 
                 return JSONResponse(
                     {
                         "prize": last_spin.prize,
-                        "sector_index": sector_index,
+                        "sector_index": PRANK_SECTOR_INDEX if is_prank_user else 2,
                         "repeat": True,
                         "message": f"Ви вже крутили колесо. Наступна спроба через {format_time_left(time_left)}.",
                     }
                 )
+
+        if is_prank_user and not is_admin:
+            row = Spin(
+                username=str(username),
+                user_id=user_id_str,
+                prize=PRANK_TEXT,
+            )
+
+            db.add(row)
+            db.commit()
+            db.refresh(row)
+
+            await notify_admins(
+                lead=lead,
+                prize=PRANK_TEXT,
+                user_id_str=user_id_str,
+                is_admin=False,
+                is_prank=True,
+            )
+
+            return JSONResponse(
+                {
+                    "prize": PRANK_TEXT,
+                    "sector_index": PRANK_SECTOR_INDEX,
+                    "repeat": False,
+                    "message": "",
+                }
+            )
 
         available_prizes = (
             db.query(PrizeStock)
@@ -138,31 +206,13 @@ async def spin(request: Request):
         db.commit()
         db.refresh(row)
 
-        bot, _ = get_bot_and_dispatcher()
-
-        admin_note = " 🧪 ТЕСТ АДМІНА" if is_admin else ""
-
-        caption = "\n".join(
-            [
-                f"Нова заявка №{lead.id}{admin_note}",
-                "",
-                f"Імʼя: {lead.name}",
-                f"Телефон: {lead.phone}",
-                f"Telegram: @{lead.username}" if not lead.username.isdigit() else f"User ID: {lead.user_id}",
-                "",
-                f"🎁 Виграш: {prize}",
-                "",
-                "⏳ Наступна прокрутка: без обмежень для адміна" if is_admin else f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
-                "",
-                f"(внутрішній ID: {lead.user_id}_{lead.id})",
-            ]
+        await notify_admins(
+            lead=lead,
+            prize=prize,
+            user_id_str=user_id_str,
+            is_admin=is_admin,
+            is_prank=False,
         )
-
-        for admin_id in ADMINS:
-            await bot.send_message(
-                chat_id=admin_id,
-                text=caption,
-            )
 
         return JSONResponse(
             {

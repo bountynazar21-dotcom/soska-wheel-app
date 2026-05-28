@@ -25,8 +25,6 @@ const sectors = [
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// Для 6 секторів центр = +30°. 
-// Якщо PNG трохи зміщений — підкручуй POINTER_OFFSET на ±2..5.
 const SAFE_CENTER_OFFSET = SECTOR_ANGLE / 2;
 const POINTER_OFFSET = -5;
 
@@ -51,10 +49,20 @@ async function spinRequest(payload) {
   }
 }
 
+function isPrankText(text) {
+  return typeof text === "string" && text.toLowerCase().includes("попався");
+}
+
 function showFireworks(text) {
   if (!fireworks || !fireworksText) return;
 
-  if (text === "Нічого" || text === "Помилка") return;
+  if (
+    text === "Нічого" ||
+    text === "Помилка" ||
+    isPrankText(text)
+  ) {
+    return;
+  }
 
   fireworksText.textContent = `🎉 ${text} 🎉`;
   fireworks.classList.add("show");
@@ -134,6 +142,8 @@ btn.addEventListener("click", async () => {
 
     if (repeat) {
       res.textContent = message || "Ви вже крутили колесо.";
+    } else if (isPrankText(prize)) {
+      res.textContent = prize;
     } else if (prize === "Нічого") {
       res.textContent = "На жаль, цього разу без подарунка. Спробуй наступного разу!";
     } else {
