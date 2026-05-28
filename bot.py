@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import (
     Message,
+    CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     WebAppInfo,
@@ -14,12 +15,17 @@ from aiogram.types import (
 from aiogram.exceptions import TelegramAPIError
 
 from database import SessionLocal, Lead
-from config import BOT_TOKEN, WEBAPP_URL
+from config import BOT_TOKEN, WEBAPP_URL, CHANNEL_USERNAME, CHANNEL_URL
 
 bot: Bot | None = None
 dp: Dispatcher | None = None
 
 router = Router()
+
+
+class Registration(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_phone = State()
 
 
 def build_webapp_keyboard() -> InlineKeyboardMarkup:
@@ -35,62 +41,72 @@ def build_webapp_keyboard() -> InlineKeyboardMarkup:
     )
 
 
-class Registration(StatesGroup):
-    waiting_for_check_photo = State()
-    waiting_for_name = State()
-    waiting_for_phone = State()
+def build_subscribe_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📢 Підписатися на канал",
+                    url=CHANNEL_URL,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✅ Я підписався",
+                    callback_data="check_subscription",
+                )
+            ],
+        ]
+    )
+
+
+async def is_user_subscribed(bot: Bot, user_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        return member.status in ("member", "administrator", "creator")
+    except TelegramAPIError as e:
+        logging.error(f"Subscription check failed: {e}")
+        return False
 
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
+
     await message.answer(
-        "Привіт! 👋\n\nНадішли, будь ласка, *фото чеку*.",
+        "Привіт! 👋\n\nНапиши, будь ласка, своє імʼя.",
         reply_markup=ReplyKeyboardRemove(),
-        parse_mode="Markdown",
     )
-    await state.set_state(Registration.waiting_for_check_photo)
 
-
-@router.message(Registration.waiting_for_check_photo, F.photo)
-async def process_check_photo(message: Message, state: FSMContext) -> None:
-    file_id = message.photo[-1].file_id
-    await state.update_data(check_photo_id=file_id)
-
-    await message.answer(
-        "Дякую! 🙌\nТепер напиши, будь ласка, *своє імʼя*.",
-        parse_mode="Markdown",
-    )
     await state.set_state(Registration.waiting_for_name)
-
-
-@router.message(Registration.waiting_for_check_photo)
-async def no_photo_warning(message: Message) -> None:
-    await message.answer(
-        "Будь ласка, надішли саме *фото чеку* 📸",
-        parse_mode="Markdown",
-    )
 
 
 @router.message(Registration.waiting_for_name, F.text)
 async def process_name(message: Message, state: FSMContext) -> None:
     name = message.text.strip()
+
+    if len(name) < 2:
+        await message.answer("Введи, будь ласка, коректне імʼя.")
+        return
+
     await state.update_data(name=name)
 
     await message.answer(
-        "Супер! ✨\nТепер напиши, будь ласка, *номер телефону* у форматі +380...",
-        parse_mode="Markdown",
+        "Супер! ✨\nТепер напиши, будь ласка, номер телефону у форматі +380..."
     )
+
     await state.set_state(Registration.waiting_for_phone)
 
 
 @router.message(Registration.waiting_for_phone, F.text)
 async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
     phone = message.text.strip()
-    await state.update_data(phone=phone)
+
+    if len(phone) < 10:
+        await message.answer("Введи, будь ласка, коректний номер телефону.")
+        return
 
     data = await state.get_data()
-    check_photo_id = data.get("check_photo_id")
     name = data.get("name") or "-"
 
     user_id = str(message.from_user.id)
@@ -110,14 +126,12 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
             existing_lead.username = str(username)
             existing_lead.name = str(name)
             existing_lead.phone = str(phone)
-            existing_lead.check_photo_id = str(check_photo_id)
         else:
             lead = Lead(
                 username=str(username),
                 user_id=user_id,
                 name=str(name),
                 phone=str(phone),
-                check_photo_id=str(check_photo_id),
             )
             db.add(lead)
 
@@ -125,20 +139,42 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 
     except Exception as e:
         logging.error(f"Failed to save lead: {e}")
-        await message.answer(
-            "Сталася помилка під час збереження заявки. Спробуй ще раз /start"
-        )
+        await message.answer("Сталася помилка. Спробуй ще раз /start")
         return
 
     finally:
         db.close()
 
-    await message.answer(
-        "Все, ти в грі! 🎉\nНатискай кнопку нижче, щоб відкрити колесо фортуни:",
-        reply_markup=build_webapp_keyboard(),
-    )
-
     await state.clear()
+
+    subscribed = await is_user_subscribed(bot, message.from_user.id)
+
+    if subscribed:
+        await message.answer(
+            "Все готово! 🎉\nНатискай кнопку нижче, щоб відкрити колесо фортуни:",
+            reply_markup=build_webapp_keyboard(),
+        )
+    else:
+        await message.answer(
+            "Щоб крутити колесо, спочатку підпишись на наш Telegram-канал 👇",
+            reply_markup=build_subscribe_keyboard(),
+        )
+
+
+@router.callback_query(F.data == "check_subscription")
+async def check_subscription_callback(callback: CallbackQuery, bot: Bot) -> None:
+    subscribed = await is_user_subscribed(bot, callback.from_user.id)
+
+    if subscribed:
+        await callback.message.answer(
+            "Підписку підтверджено ✅\nТепер можеш крутити колесо:",
+            reply_markup=build_webapp_keyboard(),
+        )
+    else:
+        await callback.answer(
+            "Підписку ще не знайдено. Підпишись на канал і натисни ще раз.",
+            show_alert=True,
+        )
 
 
 @router.message(Registration.waiting_for_phone)
@@ -162,6 +198,7 @@ def get_bot_and_dispatcher() -> tuple[Bot, Dispatcher]:
 
 async def run_bot():
     bot_obj, dp_obj = get_bot_and_dispatcher()
+
     try:
         await dp_obj.start_polling(bot_obj)
     except TelegramAPIError as e:

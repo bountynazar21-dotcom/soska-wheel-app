@@ -43,7 +43,7 @@ async def ping():
 
 @app.get("/")
 async def root():
-    return RedirectResponse(url="/static/index.html?v=4")
+    return RedirectResponse(url="/static/index.html?v=20")
 
 
 if __name__ == "__main__":

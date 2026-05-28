@@ -1,5 +1,12 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime
+from sqlalchemy import (
+    create_engine,
+    Column,
+    Integer,
+    String,
+    DateTime,
+)
 from sqlalchemy.orm import declarative_base, sessionmaker
+
 import datetime
 
 engine = create_engine(
@@ -12,24 +19,64 @@ SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
 
+# =========================
+# КОРИСТУВАЧІ / ЗАЯВКИ
+# =========================
+
 class Lead(Base):
     __tablename__ = "leads"
 
-    id = Column(Integer, primary_key=True, index=True)  # заявка №1, №2, №3...
+    id = Column(Integer, primary_key=True, index=True)
+
     username = Column(String, nullable=False)
     user_id = Column(String, unique=True, index=True, nullable=False)
+
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False)
-    check_photo_id = Column(String, nullable=False)
-    datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
+    datetime = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
+    )
+
+
+# =========================
+# СПІНИ
+# =========================
 
 class Spin(Base):
     __tablename__ = "spins"
 
     id = Column(Integer, primary_key=True, index=True)
+
     username = Column(String, nullable=False)
-    user_id = Column(String, unique=True, index=True, nullable=False)
-    check_number = Column(String, nullable=True)
+    user_id = Column(String, index=True, nullable=False)
+
     prize = Column(String, nullable=False)
-    datetime = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    # коли був spin
+    datetime = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
+    )
+
+
+# =========================
+# STOCK ПРИЗІВ
+# =========================
+
+class PrizeStock(Base):
+    __tablename__ = "prize_stock"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    sector_index = Column(Integer, unique=True, nullable=False)
+
+    prize = Column(String, nullable=False)
+
+    # None = безлімітно
+    stock = Column(Integer, nullable=True)
+
+    weight = Column(Integer, nullable=False)

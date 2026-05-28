@@ -1,13 +1,49 @@
 import random
+import datetime
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from database import SessionLocal, Spin, Lead
-from config import PRIZES, WEIGHTS, ADMINS
+from database import SessionLocal, Spin, Lead, PrizeStock
+from config import PRIZES_, ADMINS, SPIN_COOLDOWN_DAYS
 from bot import get_bot_and_dispatcher
 
 router = APIRouter()
+
+
+def format_time_left(delta: datetime.timedelta) -> str:
+    total_seconds = int(delta.total_seconds())
+
+    days = total_seconds // 86400
+    hours = (total_seconds % 86400) // 3600
+    minutes = (total_seconds % 3600) // 60
+
+    if days > 0:
+        return f"{days} дн. {hours} год."
+    if hours > 0:
+        return f"{hours} год. {minutes} хв."
+    return f"{minutes} хв."
+
+
+def ensure_prize_stock(db):
+    """
+    Створює stock призів у БД, якщо його ще немає.
+    """
+    existing_count = db.query(PrizeStock).count()
+
+    if existing_count > 0:
+        return
+
+    for item in PRIZES_:
+        prize_stock = PrizeStock(
+            sector_index=item["sector_index"],
+            prize=item["prize"],
+            stock=item["stock"],
+            weight=item["weight"],
+        )
+        db.add(prize_stock)
+
+    db.commit()
 
 
 @router.post("/spin")
@@ -16,41 +52,87 @@ async def spin(request: Request):
 
     username = data.get("username") or "unknown"
     user_id = data.get("user_id")
-    check_number = data.get("check") or "no-check"
 
     db = SessionLocal()
 
     try:
+        ensure_prize_stock(db)
+
         user_id_str = str(user_id) if user_id is not None else "unknown"
+        now = datetime.datetime.utcnow()
 
-        # 🔒 перевірка чи вже крутив
-        existing_spin = (
-            db.query(Spin)
-            .filter(Spin.user_id == user_id_str)
-            .first()
-        )
+        lead = db.query(Lead).filter(Lead.user_id == user_id_str).first()
 
-        if existing_spin:
-            prize = existing_spin.prize
-            sector_index = PRIZES.index(prize) if prize in PRIZES else 0
-
+        if not lead:
             return JSONResponse(
                 {
-                    "prize": prize,
-                    "sector_index": sector_index,
+                    "prize": "Помилка",
+                    "sector_index": 3,
                     "repeat": True,
-                    "message": "Ви вже крутили колесо.",
+                    "message": "Спочатку пройди реєстрацію в боті.",
                 }
             )
 
-        # 🎁 визначаємо приз
-        prize = random.choices(PRIZES, weights=WEIGHTS, k=1)[0]
-        sector_index = PRIZES.index(prize)
+        last_spin = (
+            db.query(Spin)
+            .filter(Spin.user_id == user_id_str)
+            .order_by(Spin.datetime.desc())
+            .first()
+        )
+
+        if last_spin:
+            cooldown_until = last_spin.datetime + datetime.timedelta(days=SPIN_COOLDOWN_DAYS)
+
+            if now < cooldown_until:
+                time_left = cooldown_until - now
+                sector_index = 3
+
+                for item in PRIZES_:
+                    if item["prize"] == last_spin.prize:
+                        sector_index = item["sector_index"]
+                        break
+
+                return JSONResponse(
+                    {
+                        "prize": last_spin.prize,
+                        "sector_index": sector_index,
+                        "repeat": True,
+                        "message": f"Ви вже крутили колесо. Наступна спроба через {format_time_left(time_left)}.",
+                    }
+                )
+
+        available_prizes = (
+            db.query(PrizeStock)
+            .filter(PrizeStock.weight > 0)
+            .filter((PrizeStock.stock == None) | (PrizeStock.stock > 0))
+            .all()
+        )
+
+        if not available_prizes:
+            return JSONResponse(
+                {
+                    "prize": "Нічого",
+                    "sector_index": 3,
+                    "repeat": False,
+                    "message": "Призи закінчились.",
+                }
+            )
+
+        selected = random.choices(
+            available_prizes,
+            weights=[p.weight for p in available_prizes],
+            k=1,
+        )[0]
+
+        prize = selected.prize
+        sector_index = selected.sector_index
+
+        if selected.stock is not None:
+            selected.stock -= 1
 
         row = Spin(
             username=str(username),
             user_id=user_id_str,
-            check_number=str(check_number),
             prize=prize,
         )
 
@@ -58,32 +140,29 @@ async def spin(request: Request):
         db.commit()
         db.refresh(row)
 
-        # 📦 дістаємо заявку
-        lead = db.query(Lead).filter(Lead.user_id == user_id_str).first()
+        bot, _ = get_bot_and_dispatcher()
 
-        if lead:
-            bot, _ = get_bot_and_dispatcher()
+        caption = "\n".join(
+            [
+                f"Нова заявка №{lead.id}",
+                "",
+                f"Імʼя: {lead.name}",
+                f"Телефон: {lead.phone}",
+                f"Telegram: @{lead.username}" if not lead.username.isdigit() else f"User ID: {lead.user_id}",
+                "",
+                f"🎁 Виграш: {prize}",
+                "",
+                f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
+                "",
+                f"(внутрішній ID: {lead.user_id}_{lead.id})",
+            ]
+        )
 
-            caption = "\n".join(
-                [
-                    f"Нова заявка №{lead.id}",
-                    "",
-                    f"Імʼя: {lead.name}",
-                    f"Телефон: {lead.phone}",
-                    f"Telegram: @{lead.username}" if not lead.username.isdigit() else f"User ID: {lead.user_id}",
-                    "",
-                    f"🎁 Виграш: {prize}",
-                    "",
-                    f"(внутрішній ID: {lead.user_id}_{lead.id})",
-                ]
+        for admin_id in ADMINS:
+            await bot.send_message(
+                chat_id=admin_id,
+                text=caption,
             )
-
-            for admin_id in ADMINS:
-                await bot.send_photo(
-                    chat_id=admin_id,
-                    photo=lead.check_photo_id,
-                    caption=caption,
-                )
 
         return JSONResponse(
             {

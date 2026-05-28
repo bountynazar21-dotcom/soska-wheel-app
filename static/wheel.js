@@ -15,19 +15,17 @@ let spinning = false;
 let currentRotation = 0;
 
 const sectors = [
-  "Смартфон",
-  "Ноутбук",
-  "Навушники",
-  "Велосипед",
-  "Годинник",
-  "Книга",
-  "Кава",
-  "Торт"
+  "iPhone 17",
+  "Pod Xlim GO Lite",
+  "Нічого",
+  "Pod Xlim GO Lite",
+  "Pod Xlim GO Lite",
+  "Pod Xlim Pro 2"
 ];
 
 const SECTOR_ANGLE = 360 / sectors.length;
 
-// Стрілка вже стоїть зверху і дивиться вниз на сектор
+// Стрілка зверху і дивиться вниз
 const POINTER_OFFSET = 0;
 
 async function spinRequest(payload) {
@@ -41,17 +39,20 @@ async function spinRequest(payload) {
     return await r.json();
   } catch (e) {
     console.error(e);
+
     return {
-      prize: "Помилка. Спробуй ще раз пізніше.",
-      sector_index: 0,
-      repeat: false,
-      message: ""
+      prize: "Помилка",
+      sector_index: 2,
+      repeat: true,
+      message: "Помилка. Спробуй ще раз пізніше."
     };
   }
 }
 
 function showFireworks(text) {
   if (!fireworks || !fireworksText) return;
+
+  if (text === "Нічого" || text === "Помилка") return;
 
   fireworksText.textContent = `🎉 ${text} 🎉`;
   fireworks.classList.add("show");
@@ -89,13 +90,13 @@ btn.addEventListener("click", async () => {
   const data = await spinRequest({ username, user_id });
   const { prize, sector_index, repeat, message } = data;
 
-  let sectorIndex = 0;
+  let sectorIndex = 2;
 
   if (typeof sector_index === "number" && sector_index >= 0) {
     sectorIndex = sector_index % sectors.length;
   } else {
     const idx = sectors.indexOf(prize);
-    sectorIndex = idx !== -1 ? idx : 0;
+    sectorIndex = idx !== -1 ? idx : 2;
     console.warn("Prize not matched, using fallback sector:", prize);
   }
 
@@ -129,9 +130,13 @@ btn.addEventListener("click", async () => {
 
     pointerRotator.removeEventListener("transitionend", onEnd);
 
-    res.textContent = repeat
-      ? `${message || "Ви вже крутили колесо."} Ваш приз: ${prize}`
-      : `Вітаємо! Ви виграли: ${prize}`;
+    if (repeat) {
+      res.textContent = message || "Ви вже крутили колесо.";
+    } else if (prize === "Нічого") {
+      res.textContent = "На жаль, цього разу без подарунка. Спробуй наступного разу!";
+    } else {
+      res.textContent = `Вітаємо! Ви виграли: ${prize}`;
+    }
 
     showFireworks(prize);
 
