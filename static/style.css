@@ -9,7 +9,7 @@ body {
     Arial, sans-serif;
   min-height: 100vh;
   background: #000;
-  background-image: url("assets/bg.png?v=20");
+  background-image: url("assets/bg.png?v=21");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -21,23 +21,25 @@ body {
   width: 100%;
   max-width: 430px;
   margin: 0 auto;
-  padding: 18px 12px 24px;
+  padding: 10px 12px 24px;
   box-sizing: border-box;
   text-align: center;
 }
 
 .brand {
-  font-size: 27px;
+  font-size: 28px;
   font-weight: 800;
-  margin: 4px 0 12px;
-  line-height: 1.15;
+  margin: 6px 0 10px;
+  line-height: 1.1;
   text-shadow: 0 0 12px rgba(0, 0, 0, 0.95);
 }
 
+/* ===== КОЛЕСО ===== */
+
 .wheel-wrap {
   position: relative;
-  width: min(92vw, 380px);
-  margin: 0 auto 12px;
+  width: min(86vw, 350px);
+  margin: 34px auto 10px;
 }
 
 .wheel-container {
@@ -51,6 +53,8 @@ body {
   height: 100%;
   display: block;
 }
+
+/* ===== СТРІЛКА ===== */
 
 .pointer-rotator {
   position: absolute;
@@ -66,24 +70,48 @@ body {
   position: absolute;
   left: 50%;
   top: 0;
-  width: 42px;
-  transform: translateX(-50%) translateY(28%);
-  filter: drop-shadow(0 0 6px #00ff66);
+
+  width: 34px;
+
+  transform:
+    translateX(-50%)
+    translateY(38%);
+
+  filter:
+    drop-shadow(0 0 4px #00ff66)
+    drop-shadow(0 0 10px rgba(0,255,100,0.45));
+
   backface-visibility: hidden;
 }
 
+/* ===== КНОПКА ===== */
+
 .spin-btn {
   margin-top: 14px;
-  padding: 12px 24px;
-  min-width: 180px;
+
+  padding: 13px 24px;
+  min-width: 185px;
+
   border-radius: 16px;
   border: none;
+
   font-size: 20px;
   font-weight: 700;
-  background: linear-gradient(90deg, var(--purple), var(--green));
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--purple),
+      var(--green)
+    );
+
   color: #fff;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.55);
+
   cursor: pointer;
+
   transition:
     transform 0.08s ease-out,
     box-shadow 0.08s ease-out,
@@ -92,7 +120,9 @@ body {
 
 .spin-btn:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.7);
+
+  box-shadow:
+    0 5px 14px rgba(0, 0, 0, 0.7);
 }
 
 .spin-btn:disabled {
@@ -100,25 +130,38 @@ body {
   cursor: default;
 }
 
+/* ===== РЕЗУЛЬТАТ ===== */
+
 .result {
   margin: 14px auto 0;
+
   max-width: 360px;
+
   font-size: 18px;
-  line-height: 1.25;
+  line-height: 1.3;
   font-weight: 800;
+
   min-height: 24px;
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.95);
+
+  text-shadow:
+    0 0 8px rgba(0, 0, 0, 0.95);
 }
+
+/* ===== ФЕЄРВЕРК ===== */
 
 .fireworks {
   position: fixed;
   inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   pointer-events: none;
+
   opacity: 0;
   transition: opacity 0.2s ease-out;
+
   z-index: 999;
 }
 
@@ -128,31 +171,43 @@ body {
 
 #fireworks-text {
   color: #fff;
+
   font-size: 22px;
   font-weight: 700;
+
   padding: 14px 22px;
+
   border-radius: 18px;
-  background: radial-gradient(
-    circle at 20% 20%,
-    #ffeb3b,
-    #ff4081,
-    #651fff
-  );
-  box-shadow: 0 0 32px rgba(0, 0, 0, 0.7);
+
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      #ffeb3b,
+      #ff4081,
+      #651fff
+    );
+
+  box-shadow:
+    0 0 32px rgba(0, 0, 0, 0.7);
+
   animation:
     pop 0.8s ease-out,
     float 1.5s ease-in-out infinite alternate;
 }
+
+/* ===== АНІМАЦІЇ ===== */
 
 @keyframes pop {
   0% {
     transform: scale(0.2);
     opacity: 0;
   }
+
   60% {
     transform: scale(1.05);
     opacity: 1;
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
@@ -163,49 +218,18 @@ body {
   0% {
     transform: translateY(0);
   }
+
   100% {
     transform: translateY(-10px);
   }
 }
 
+/* ===== АДАПТИВ ===== */
+
 @media (max-width: 390px) {
+
   .app {
-    padding: 16px 10px 22px;
-  }
-
-  .brand {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-
-  .wheel-wrap {
-    width: min(91vw, 350px);
-  }
-
-  .pointer {
-    width: 36px;
-    transform: translateX(-50%) translateY(34%);
-  }
-
-  .spin-btn {
-    margin-top: 12px;
-    font-size: 18px;
-    min-width: 170px;
-  }
-
-  .result {
-    font-size: 17px;
-    max-width: 330px;
-  }
-
-  #fireworks-text {
-    font-size: 18px;
-  }
-}
-
-@media (max-height: 720px) {
-  .app {
-    padding-top: 10px;
+    padding: 8px 10px 20px;
   }
 
   .brand {
@@ -214,7 +238,44 @@ body {
   }
 
   .wheel-wrap {
-    width: min(86vw, 340px);
+    width: min(84vw, 330px);
+    margin-top: 28px;
+  }
+
+  .pointer {
+    width: 30px;
+
+    transform:
+      translateX(-50%)
+      translateY(42%);
+  }
+
+  .spin-btn {
+    margin-top: 12px;
+
+    font-size: 18px;
+    min-width: 170px;
+  }
+
+  .result {
+    font-size: 17px;
+    max-width: 320px;
+  }
+
+  #fireworks-text {
+    font-size: 18px;
+  }
+}
+
+@media (max-height: 720px) {
+
+  .brand {
+    font-size: 24px;
+  }
+
+  .wheel-wrap {
+    width: min(82vw, 320px);
+    margin-top: 22px;
   }
 
   .spin-btn {
@@ -225,6 +286,5 @@ body {
     margin-top: 10px;
   }
 }
-
 
 
