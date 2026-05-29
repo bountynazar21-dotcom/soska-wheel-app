@@ -28,7 +28,7 @@ SPIN_COOLDOWN_DAYS = 7
 PRIZES_ = [
     {"sector_index": 0, "prize": "iPhone 17", "stock": 0, "weight": 0},
     {"sector_index": 1, "prize": "Pod Xlim GO Lite", "stock": 1, "weight": 1},
-    {"sector_index": 2, "prize": "Нічого", "stock": None, "weight": 1000},
+    {"sector_index": 2, "prize": "Нічого", "stock": None, "weight": 1},
     {"sector_index": 3, "prize": "Pod Xlim GO Lite", "stock": 1, "weight": 1},
     {"sector_index": 4, "prize": "Pod Xlim GO Lite", "stock": 1, "weight": 1},
     {"sector_index": 5, "prize": "Pod Xlim Pro 2", "stock": 1, "weight": 1},
