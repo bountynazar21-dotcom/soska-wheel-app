@@ -15,12 +15,12 @@ let spinning = false;
 let currentRotation = 0;
 
 const sectors = [
-  "iPhone 17",
-  "Pod Xlim GO Lite",
+  "Vaporesso XROS Mini",
+  "OXVA XLIM GO KIT",
+  "POD Система IBAR Smart Pod Carbon",
   "Нічого",
-  "Pod Xlim GO Lite",
-  "Pod Xlim GO Lite",
-  "Pod Xlim Pro 2"
+  "Vaporesso XROS 5 MINI",
+  "OXVA XLIM GO Lite"
 ];
 
 const SECTOR_ANGLE = 360 / sectors.length;
@@ -42,7 +42,7 @@ async function spinRequest(payload) {
 
     return {
       prize: "Помилка",
-      sector_index: 2,
+      sector_index: 3,
       repeat: true,
       message: "Помилка. Спробуй ще раз пізніше."
     };
@@ -100,13 +100,13 @@ btn.addEventListener("click", async () => {
   const data = await spinRequest({ username, user_id });
   const { prize, sector_index, repeat, message } = data;
 
-  let sectorIndex = 2;
+  let sectorIndex = 3;
 
   if (typeof sector_index === "number" && sector_index >= 0) {
     sectorIndex = sector_index % sectors.length;
   } else {
     const idx = sectors.indexOf(prize);
-    sectorIndex = idx !== -1 ? idx : 2;
+    sectorIndex = idx !== -1 ? idx : 3;
     console.warn("Prize not matched, using fallback sector:", prize);
   }
 
