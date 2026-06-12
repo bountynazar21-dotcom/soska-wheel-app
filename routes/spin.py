@@ -51,7 +51,13 @@ def ensure_prize_stock(db):
     db.commit()
 
 
-async def notify_admins(lead: Lead, prize: str, user_id_str: str, is_admin: bool, is_prank: bool):
+async def notify_admins(
+    lead: Lead,
+    prize: str,
+    user_id_str: str,
+    is_admin: bool,
+    is_prank: bool,
+):
     bot, _ = get_bot_and_dispatcher()
 
     notes = []
@@ -87,11 +93,16 @@ async def notify_admins(lead: Lead, prize: str, user_id_str: str, is_admin: bool
         )
 
 
-async def notify_user_win(user_id_str: str, prize: str, sector_index: int, is_prank: bool):
+async def notify_user_win(
+    user_id_str: str,
+    prize: str,
+    sector_index: int,
+    is_prank: bool,
+):
     if is_prank:
         return
 
-    if sector_index == 2 or prize == "Нічого":
+    if sector_index == 3 or prize == "Нічого":
         return
 
     try:
@@ -133,8 +144,8 @@ async def spin(request: Request):
         if not lead:
             return JSONResponse(
                 {
-                    "prize": "Помилка",
-                    "sector_index": 2,
+                    "prize": "Нічого",
+                    "sector_index": 3,
                     "repeat": True,
                     "message": "Спочатку пройди реєстрацію в боті.",
                 }
@@ -148,7 +159,9 @@ async def spin(request: Request):
         )
 
         if last_spin and not is_admin:
-            cooldown_until = last_spin.datetime + datetime.timedelta(days=SPIN_COOLDOWN_DAYS)
+            cooldown_until = last_spin.datetime + datetime.timedelta(
+                days=SPIN_COOLDOWN_DAYS
+            )
 
             if now < cooldown_until:
                 time_left = cooldown_until - now
@@ -156,7 +169,7 @@ async def spin(request: Request):
                 return JSONResponse(
                     {
                         "prize": last_spin.prize,
-                        "sector_index": PRANK_SECTOR_INDEX if is_prank_user else 2,
+                        "sector_index": PRANK_SECTOR_INDEX if is_prank_user else 3,
                         "repeat": True,
                         "message": f"Ви вже крутили колесо. Наступна спроба через {format_time_left(time_left)}.",
                     }
@@ -201,7 +214,7 @@ async def spin(request: Request):
             return JSONResponse(
                 {
                     "prize": "Нічого",
-                    "sector_index": 2,
+                    "sector_index": 3,
                     "repeat": False,
                     "message": "Призи закінчились.",
                 }
