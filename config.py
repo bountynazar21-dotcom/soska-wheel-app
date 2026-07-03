@@ -73,13 +73,13 @@ PRIZES_ = [
     {
         "sector_index": 0,
         "prize": "Vaporesso XROS Mini",
-        "stock": 2,
+        "stock": 1,
         "weight": 1,
     },
     {
         "sector_index": 1,
         "prize": "OXVA XLIM GO KIT",
-        "stock": 2,
+        "stock": 1,
         "weight": 1,
     },
     {
@@ -97,13 +97,13 @@ PRIZES_ = [
     {
         "sector_index": 4,
         "prize": "Vaporesso XROS 5 MINI",
-        "stock": 2,
+        "stock": 1,
         "weight": 1,
     },
     {
         "sector_index": 5,
         "prize": "OXVA XLIM GO Lite",
-        "stock": 2,
+        "stock": 1,
         "weight": 1,
     },
 ]
