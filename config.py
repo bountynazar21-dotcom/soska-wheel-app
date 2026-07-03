@@ -2,14 +2,14 @@ import os
 
 APP_BASE_URL = os.getenv(
     "APP_BASE_URL",
-    "https://soska-wheel-app-production.up.railway.app",
+    "https://soska-wheel-newtt-production.up.railway.app",
 )
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html?v=33",
+    f"{APP_BASE_URL}/static/index.html?v=37",
 )
 
 ADMINS: set[int] = {
@@ -21,54 +21,52 @@ CHANNEL_URL = "https://t.me/soska_bar"
 
 SPIN_COOLDOWN_DAYS = 7
 
-# Середня очікувана кількість учасників за день
+# Середня очікувана кількість учасників
 EXPECTED_PARTICIPANTS = 600
 
-# На яких реальних прокрутках відкривати подарунки.
-# Усього 9 подарунків = 9 порогів.
-#
-# Логіка:
-# 1–39 прокрутка — тільки "Нічого"
-# 40+ — відкривається 1 подарунок
-# 100+ — 2 подарунок
-# 160+ — 3 подарунок
-# 220+ — 4 подарунок
-# 285+ — 5 подарунок
-# 350+ — 6 подарунок
-# 420+ — 7 подарунок
-# 490+ — 8 подарунок
-# 550+ — 9 подарунок
+# Режим видачі подарунків:
+# controlled = подарунки відкриваються на конкретних прокрутках
+PRIZE_MODE = os.getenv("PRIZE_MODE", "controlled").strip().lower()
+
+# У controlled-режимі шанс не використовується.
+# Залишаємо 0, щоб випадково не працював chance-режим.
+WIN_CHANCE_PERCENT = float(os.getenv("WIN_CHANCE_PERCENT", "0"))
+
+# Відкриваємо тільки 1 подарунок на 450-й реальній прокрутці.
 PRIZE_UNLOCK_SPINS = [
-    40,
-    100,
-    160,
-    220,
-    285,
-    350,
-    420,
-    490,
-    550,
+    450,
 ]
 
-# Старт розіграшу: 26.06.2026 о 08:30 по Києву.
-# У UTC це 05:30.
+# Старт розіграшу.
+# ВАЖЛИВО:
+# якщо в базі вже є старі прокрутки після цієї дати,
+# вони будуть рахуватись у ці 450 спінів.
 #
-# Це НЕ блокує запуск бота.
-# Це потрібно тільки для того, щоб старі тестові прокрутки
-# не рахувалися в прогрес 600 людей.
-CAMPAIGN_START_AT_UTC = "2026-06-26T05:30:00"
+# Якщо треба рахувати 450 спінів прямо з моменту нового запуску,
+# постав сюди актуальний час старту в UTC.
+CAMPAIGN_START_AT_UTC = "2026-07-01T05:30:00"
 
-# Кінець розіграшу в config залишаємо для порядку.
-# Якщо ти вручну вимикаєш бота після 20:30,
-# у routes/spin.py цей параметр можна не використовувати.
-CAMPAIGN_END_AT_UTC = "2026-06-26T17:30:00"
+# Кінець розіграшу. Якщо ти вручну вимикаєш бота,
+# цей параметр може просто лежати для порядку.
+CAMPAIGN_END_AT_UTC = "2026-07-04T17:30:00"
 
 # Версія призового фонду.
-# Якщо треба примусово оновити залишки призів у базі — міняємо версію.
-PRIZE_POOL_VERSION = "2026-06-26-prize-pool-v2-600"
+# Міняємо версію, щоб база точно оновила залишки:
+# XROS Mini = 1 шт, всі інші = 0.
+PRIZE_POOL_VERSION = os.getenv(
+    "PRIZE_POOL_VERSION",
+    "xros-mini-one-prize-after-450-v2",
+)
 
-# ПОРЯДОК СЕКТОРІВ = ЯК НА КОЛЕСІ
-# ВІД ВЕРХУ ЗА ГОДИННИКОВОЮ
+# ПОРЯДОК СЕКТОРІВ = ЯК НА НОВОМУ КОЛЕСІ
+# ВІД ВЕРХУ ЗА ГОДИННИКОВОЮ:
+# 0 — Vaporesso XROS Mini
+# 1 — Шопер
+# 2 — Нічого
+# 3 — Головний убір
+# 4 — OXVA Go Lite
+# 5 — OXVA Pro 3
+# 6 — Брелок
 PRIZES_ = [
     {
         "sector_index": 0,
@@ -78,33 +76,39 @@ PRIZES_ = [
     },
     {
         "sector_index": 1,
-        "prize": "OXVA XLIM GO KIT",
-        "stock": 1,
-        "weight": 1,
+        "prize": "Шопер",
+        "stock": 0,
+        "weight": 0,
     },
     {
         "sector_index": 2,
-        "prize": "POD Система IBAR Smart Pod Carbon",
-        "stock": 1,
-        "weight": 1,
-    },
-    {
-        "sector_index": 3,
         "prize": "Нічого",
         "stock": None,
         "weight": 50,
     },
     {
+        "sector_index": 3,
+        "prize": "Головний убір",
+        "stock": 0,
+        "weight": 0,
+    },
+    {
         "sector_index": 4,
-        "prize": "Vaporesso XROS 5 MINI",
-        "stock": 1,
-        "weight": 1,
+        "prize": "OXVA Go Lite",
+        "stock": 0,
+        "weight": 0,
     },
     {
         "sector_index": 5,
-        "prize": "OXVA XLIM GO Lite",
-        "stock": 1,
-        "weight": 1,
+        "prize": "OXVA Pro 3",
+        "stock": 0,
+        "weight": 0,
+    },
+    {
+        "sector_index": 6,
+        "prize": "Брелок",
+        "stock": 0,
+        "weight": 0,
     },
 ]
 
@@ -201,4 +205,6 @@ PRANK_USER_IDS: set[int] = {
 }
 
 PRANK_TEXT = "Хахах, попався шпіоніро ))"
-PRANK_SECTOR_INDEX = 3
+
+# На новій картинці сектор "Нічого" має індекс 2
+PRANK_SECTOR_INDEX =3
