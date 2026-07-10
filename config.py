@@ -9,7 +9,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html?v=37",
+    f"{APP_BASE_URL}/static/index.html?v=38",
 )
 
 ADMINS: set[int] = {
@@ -28,45 +28,50 @@ EXPECTED_PARTICIPANTS = 600
 # controlled = подарунки відкриваються на конкретних прокрутках
 PRIZE_MODE = os.getenv("PRIZE_MODE", "controlled").strip().lower()
 
-# У controlled-режимі шанс не використовується.
-# Залишаємо 0, щоб випадково не працював chance-режим.
-WIN_CHANCE_PERCENT = float(os.getenv("WIN_CHANCE_PERCENT", "0"))
-
-# Відкриваємо тільки 1 подарунок на 450-й реальній прокрутці.
-PRIZE_UNLOCK_SPINS = [
-    450,
-]
-
-# Старт розіграшу.
-# ВАЖЛИВО:
-# якщо в базі вже є старі прокрутки після цієї дати,
-# вони будуть рахуватись у ці 450 спінів.
-#
-# Якщо треба рахувати 450 спінів прямо з моменту нового запуску,
-# постав сюди актуальний час старту в UTC.
-CAMPAIGN_START_AT_UTC = "2026-07-01T05:30:00"
-
-# Кінець розіграшу. Якщо ти вручну вимикаєш бота,
-# цей параметр може просто лежати для порядку.
-CAMPAIGN_END_AT_UTC = "2026-07-04T17:30:00"
-
-# Версія призового фонду.
-# Міняємо версію, щоб база точно оновила залишки:
-# XROS Mini = 1 шт, всі інші = 0.
-PRIZE_POOL_VERSION = os.getenv(
-    "PRIZE_POOL_VERSION",
-    "xros-mini-one-prize-after-450-v2",
+# У controlled-режимі випадковий шанс не використовується
+WIN_CHANCE_PERCENT = float(
+    os.getenv("WIN_CHANCE_PERCENT", "0")
 )
 
-# ПОРЯДОК СЕКТОРІВ = ЯК НА НОВОМУ КОЛЕСІ
+# 5 подарунків розподіляються протягом приблизно 600 прокруток:
+#
+# 1-й подарунок — 90-та прокрутка
+# 2-й подарунок — 210-та прокрутка
+# 3-й подарунок — 330-та прокрутка
+# 4-й подарунок — 450-та прокрутка
+# 5-й подарунок — 570-та прокрутка
+PRIZE_UNLOCK_SPINS = [
+    90,
+    210,
+    330,
+    450,
+    570,
+]
+
+# Старт розіграшу:
+# 10 липня 2026 року о 08:30 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-07-10T05:30:00"
+
+# Завершення розіграшу:
+# 10 липня 2026 року о 20:30 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-07-10T17:30:00"
+
+# Нова версія призового фонду.
+# Версію потрібно змінити, щоб база оновила назви та залишки призів.
+PRIZE_POOL_VERSION = os.getenv(
+    "PRIZE_POOL_VERSION",
+    "five-new-prizes-600-participants-v4",
+)
+
+# ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
 # ВІД ВЕРХУ ЗА ГОДИННИКОВОЮ:
+#
 # 0 — Vaporesso XROS Mini
-# 1 — Шопер
-# 2 — Нічого
-# 3 — Головний убір
-# 4 — OXVA Go Lite
-# 5 — OXVA Pro 3
-# 6 — Брелок
+# 1 — OXVA XLIM GO KIT
+# 2 — POD Система IBAR Smart Pod Carbon
+# 3 — Нічого
+# 4 — Vaporesso XROS 5 MINI
+# 5 — OXVA XLIM GO Lite
 PRIZES_ = [
     {
         "sector_index": 0,
@@ -76,39 +81,33 @@ PRIZES_ = [
     },
     {
         "sector_index": 1,
-        "prize": "Шопер",
-        "stock": 0,
-        "weight": 0,
+        "prize": "OXVA XLIM GO KIT",
+        "stock": 1,
+        "weight": 1,
     },
     {
         "sector_index": 2,
+        "prize": "POD Система IBAR Smart Pod Carbon",
+        "stock": 1,
+        "weight": 1,
+    },
+    {
+        "sector_index": 3,
         "prize": "Нічого",
         "stock": None,
         "weight": 50,
     },
     {
-        "sector_index": 3,
-        "prize": "Головний убір",
-        "stock": 0,
-        "weight": 0,
-    },
-    {
         "sector_index": 4,
-        "prize": "OXVA Go Lite",
-        "stock": 0,
-        "weight": 0,
+        "prize": "Vaporesso XROS 5 MINI",
+        "stock": 1,
+        "weight": 1,
     },
     {
         "sector_index": 5,
-        "prize": "OXVA Pro 3",
-        "stock": 0,
-        "weight": 0,
-    },
-    {
-        "sector_index": 6,
-        "prize": "Брелок",
-        "stock": 0,
-        "weight": 0,
+        "prize": "OXVA XLIM GO Lite",
+        "stock": 1,
+        "weight": 1,
     },
 ]
 
@@ -206,5 +205,5 @@ PRANK_USER_IDS: set[int] = {
 
 PRANK_TEXT = "Хахах, попався шпіоніро ))"
 
-# На новій картинці сектор "Нічого" має індекс 2
-PRANK_SECTOR_INDEX =3
+# Сектор «Нічого» має індекс 3
+PRANK_SECTOR_INDEX = 3
