@@ -60,7 +60,7 @@ CAMPAIGN_END_AT_UTC = "2026-07-10T17:30:00"
 # Версію потрібно змінити, щоб база оновила назви та залишки призів.
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-new-prizes-600-participants-v4",
+    "five-new-prizes-600-participants-v5",
 )
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
@@ -76,7 +76,7 @@ PRIZES_ = [
     {
         "sector_index": 0,
         "prize": "Vaporesso XROS Mini",
-        "stock": 1,
+        "stock": 2,
         "weight": 1,
     },
     {
@@ -88,7 +88,7 @@ PRIZES_ = [
     {
         "sector_index": 2,
         "prize": "POD Система IBAR Smart Pod Carbon",
-        "stock": 1,
+        "stock": 0,
         "weight": 1,
     },
     {
