@@ -1,18 +1,34 @@
+import os
+import datetime
+
 from sqlalchemy import (
     create_engine,
     Column,
     Integer,
     String,
     DateTime,
+    Boolean,
 )
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-import datetime
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///wheel.db")
+
+# Railway / Heroku інколи дають postgres://, а SQLAlchemy хоче postgresql://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine_kwargs = {
+    "echo": False,
+}
+
+# connect_args потрібен тільки для SQLite
+if DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
 
 engine = create_engine(
-    "sqlite:///wheel.db",
-    connect_args={"check_same_thread": False},
-    echo=False,
+    DATABASE_URL,
+    **engine_kwargs,
 )
 
 SessionLocal = sessionmaker(bind=engine)
@@ -60,6 +76,36 @@ class Spin(Base):
         DateTime,
         default=datetime.datetime.utcnow,
         nullable=False,
+    )
+
+
+# =========================
+# БОНУСНІ СПІНИ ЗА РЕФЕРАЛІВ
+# =========================
+
+class ReferralBonus(Base):
+    __tablename__ = "referral_bonuses"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Хто запросив
+    referrer_user_id = Column(String, index=True, nullable=False)
+
+    # Кого запросив
+    invited_user_id = Column(String, unique=True, index=True, nullable=False)
+
+    # Використаний чи ні бонусний спін
+    is_used = Column(Boolean, default=False, nullable=False)
+
+    created_at = Column(
+        DateTime,
+        default=datetime.datetime.utcnow,
+        nullable=False,
+    )
+
+    used_at = Column(
+        DateTime,
+        nullable=True,
     )
 
 
@@ -178,3 +224,134 @@ def ensure_prize_stock(db) -> None:
         current_version.value = PRIZE_POOL_VERSION
 
     db.commit()
+
+
+# =========================
+# РЕФЕРАЛЬНА СИСТЕМА
+# =========================
+
+def get_referral_day_bounds() -> tuple[datetime.datetime, datetime.datetime]:
+    """
+    Межі поточного дня по UTC.
+
+    Для ліміту 5 друзів на день цього достатньо.
+    Якщо треба буде чітко по Києву — можна буде переробити під timezone.
+    """
+
+    now = datetime.datetime.utcnow()
+
+    day_start = now.replace(
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+
+    day_end = day_start + datetime.timedelta(days=1)
+
+    return day_start, day_end
+
+
+def count_today_referral_bonuses(db, referrer_user_id: str) -> int:
+    """
+    Рахує, скільки бонусів за друзів користувач уже отримав сьогодні.
+    """
+
+    day_start, day_end = get_referral_day_bounds()
+
+    return (
+        db.query(ReferralBonus)
+        .filter(ReferralBonus.referrer_user_id == str(referrer_user_id))
+        .filter(ReferralBonus.created_at >= day_start)
+        .filter(ReferralBonus.created_at < day_end)
+        .count()
+    )
+
+
+def get_unused_referral_spins_count(db, user_id: str) -> int:
+    """
+    Кількість невикористаних бонусних спінів користувача.
+    """
+
+    return (
+        db.query(ReferralBonus)
+        .filter(ReferralBonus.referrer_user_id == str(user_id))
+        .filter(ReferralBonus.is_used == False)  # noqa: E712
+        .count()
+    )
+
+
+def add_referral_bonus(db, referrer_user_id: str, invited_user_id: str) -> bool:
+    """
+    Нараховує +1 бонусний спін за запрошеного друга.
+
+    Повертає:
+    True — бонус нараховано
+    False — бонус не нараховано
+    """
+
+    from config import REFERRAL_DAILY_LIMIT
+
+    referrer_user_id = str(referrer_user_id)
+    invited_user_id = str(invited_user_id)
+
+    # Не можна запросити самого себе
+    if referrer_user_id == invited_user_id:
+        return False
+
+    # Якщо цей запрошений користувач уже давав бонус — повторно не даємо
+    existing_bonus = (
+        db.query(ReferralBonus)
+        .filter(ReferralBonus.invited_user_id == invited_user_id)
+        .first()
+    )
+
+    if existing_bonus is not None:
+        return False
+
+    # Ліміт 5 друзів на день
+    today_count = count_today_referral_bonuses(db, referrer_user_id)
+
+    if today_count >= REFERRAL_DAILY_LIMIT:
+        return False
+
+    bonus = ReferralBonus(
+        referrer_user_id=referrer_user_id,
+        invited_user_id=invited_user_id,
+        is_used=False,
+    )
+
+    db.add(bonus)
+    db.commit()
+
+    return True
+
+
+def use_referral_bonus_spin(db, user_id: str) -> bool:
+    """
+    Використовує 1 бонусний спін користувача.
+
+    Повертає:
+    True — бонусний спін використано
+    False — бонусних спінів немає
+    """
+
+    user_id = str(user_id)
+
+    bonus = (
+        db.query(ReferralBonus)
+        .filter(ReferralBonus.referrer_user_id == user_id)
+        .filter(ReferralBonus.is_used == False)  # noqa: E712
+        .order_by(ReferralBonus.created_at.asc())
+        .first()
+    )
+
+    if bonus is None:
+        return False
+
+    bonus.is_used = True
+    bonus.used_at = datetime.datetime.utcnow()
+
+    db.commit()
+
+    return True

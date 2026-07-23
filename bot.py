@@ -15,7 +15,13 @@ from aiogram.types import (
 )
 from aiogram.exceptions import TelegramAPIError
 
-from database import SessionLocal, Lead, Spin
+from database import (
+    SessionLocal,
+    Lead,
+    Spin,
+    add_referral_bonus,
+    get_unused_referral_spins_count,
+)
 from config import (
     BOT_TOKEN,
     WEBAPP_URL,
@@ -60,6 +66,10 @@ def format_time_left(delta: datetime.timedelta) -> str:
     if hours > 0:
         return f"{hours} год. {minutes} хв."
     return f"{minutes} хв."
+
+
+def get_referral_link(user_id: str | int) -> str:
+    return f"https://t.me/s0ska_bar_bot?start=ref_{user_id}"
 
 
 def build_webapp_keyboard() -> InlineKeyboardMarkup:
@@ -146,17 +156,82 @@ def get_active_cooldown(user_id: str | int | None):
         db.close()
 
 
+def has_bonus_spin(user_id: str | int | None) -> bool:
+    if user_id is None:
+        return False
+
+    db = SessionLocal()
+
+    try:
+        return get_unused_referral_spins_count(db, str(user_id)) > 0
+    finally:
+        db.close()
+
+
+def can_user_try_spin(user_id: str | int | None) -> tuple[bool, datetime.timedelta | None]:
+    """
+    True — користувач може перейти до колеса.
+    False — активний cooldown і немає бонусного спіну.
+    """
+
+    cooldown_left = get_active_cooldown(user_id)
+
+    if cooldown_left is None:
+        return True, None
+
+    if has_bonus_spin(user_id):
+        return True, None
+
+    return False, cooldown_left
+
+
+def parse_referrer_id(message: Message) -> str | None:
+    """
+    Парсить deep-link:
+    /start ref_5480082089
+    """
+
+    text = message.text or ""
+    parts = text.split(maxsplit=1)
+
+    if len(parts) < 2:
+        return None
+
+    payload = parts[1].strip()
+
+    if not payload.startswith("ref_"):
+        return None
+
+    referrer_id = payload.replace("ref_", "", 1).strip()
+
+    if not referrer_id.isdigit():
+        return None
+
+    return referrer_id
+
+
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
     await state.clear()
 
     user_id = str(message.from_user.id)
-    cooldown_left = get_active_cooldown(user_id)
+    referrer_id = parse_referrer_id(message)
 
-    if cooldown_left:
+    if referrer_id and referrer_id != user_id:
+        await state.update_data(referrer_id=referrer_id)
+
+    can_try, cooldown_left = can_user_try_spin(user_id)
+
+    if not can_try and cooldown_left:
+        referral_link = get_referral_link(user_id)
+
         await message.answer(
             "Ти вже крутив колесо 🎡\n"
-            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}.\n\n"
+            "Але ти можеш отримати додатковий спін 👇\n"
+            "Запроси друга за своїм посиланням. Коли він пройде реєстрацію, "
+            "тобі автоматично додасться ще одна спроба.\n\n"
+            f"🔗 Твоє посилання:\n{referral_link}"
         )
         return
 
@@ -194,19 +269,25 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
         return
 
     user_id = str(message.from_user.id)
-    cooldown_left = get_active_cooldown(user_id)
 
-    if cooldown_left:
+    can_try, cooldown_left = can_user_try_spin(user_id)
+
+    if not can_try and cooldown_left:
         await state.clear()
+
+        referral_link = get_referral_link(user_id)
 
         await message.answer(
             "Ти вже крутив колесо 🎡\n"
-            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+            f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}.\n\n"
+            "Але ти можеш отримати додатковий спін за запрошеного друга 👇\n"
+            f"🔗 Твоє посилання:\n{referral_link}"
         )
         return
 
     data = await state.get_data()
     name = data.get("name") or "-"
+    referrer_id = data.get("referrer_id")
 
     username = (
         message.from_user.username
@@ -215,6 +296,7 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
     )
 
     db = SessionLocal()
+    referral_bonus_added = False
 
     try:
         existing_lead = (
@@ -222,6 +304,8 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
             .filter(Lead.user_id == user_id)
             .first()
         )
+
+        is_new_lead = existing_lead is None
 
         if existing_lead:
             existing_lead.username = str(username)
@@ -238,21 +322,56 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 
         db.commit()
 
+        # Бонус нараховується тільки якщо це новий користувач,
+        # який прийшов по реферальному посиланню.
+        if is_new_lead and referrer_id:
+            referral_bonus_added = add_referral_bonus(
+                db=db,
+                referrer_user_id=str(referrer_id),
+                invited_user_id=user_id,
+            )
+
     except Exception as e:
-        logging.error(f"Failed to save lead: {e}")
+        logging.error(f"Failed to save lead or referral bonus: {e}")
         await message.answer("Сталася помилка. Спробуй ще раз /start")
         return
 
     finally:
         db.close()
 
+    if referral_bonus_added and referrer_id:
+        try:
+            await bot.send_message(
+                chat_id=int(referrer_id),
+                text=(
+                    "🎁 Тобі нараховано +1 додатковий спін!\n\n"
+                    "Твій друг пройшов реєстрацію за твоїм посиланням. "
+                    "Можеш знову випробувати удачу в Колесі Фортуни 🎡"
+                ),
+            )
+        except TelegramAPIError as e:
+            logging.error(f"Failed to notify referrer {referrer_id}: {e}")
+
     await state.clear()
 
     subscribed = await is_user_subscribed(bot, message.from_user.id)
 
+    referral_link = get_referral_link(user_id)
+    bonus_count = 0
+
+    db = SessionLocal()
+    try:
+        bonus_count = get_unused_referral_spins_count(db, user_id)
+    finally:
+        db.close()
+
     if subscribed:
         await message.answer(
-            "Все готово! 🎉\nНатискай кнопку нижче, щоб відкрити колесо фортуни:",
+            "Все готово! 🎉\n"
+            "Натискай кнопку нижче, щоб відкрити колесо фортуни:\n\n"
+            f"🎁 Твої бонусні спіни: {bonus_count}\n\n"
+            "Хочеш ще одну спробу? Запроси друга 👇\n"
+            f"🔗 {referral_link}",
             reply_markup=build_webapp_keyboard(),
         )
     else:
@@ -265,13 +384,18 @@ async def process_phone(message: Message, state: FSMContext, bot: Bot) -> None:
 @router.callback_query(F.data == "check_subscription")
 async def check_subscription_callback(callback: CallbackQuery, bot: Bot) -> None:
     user_id = str(callback.from_user.id)
-    cooldown_left = get_active_cooldown(user_id)
 
-    if cooldown_left:
+    can_try, cooldown_left = can_user_try_spin(user_id)
+
+    if not can_try and cooldown_left:
         if callback.message:
+            referral_link = get_referral_link(user_id)
+
             await callback.message.answer(
                 "Ти вже крутив колесо 🎡\n"
-                f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}."
+                f"Наступна спроба буде доступна через {format_time_left(cooldown_left)}.\n\n"
+                "Але ти можеш отримати додатковий спін за запрошеного друга 👇\n"
+                f"🔗 Твоє посилання:\n{referral_link}"
             )
         return
 
@@ -280,9 +404,21 @@ async def check_subscription_callback(callback: CallbackQuery, bot: Bot) -> None
     if subscribed:
         await callback.answer("Підписку підтверджено ✅")
 
+        referral_link = get_referral_link(user_id)
+
+        db = SessionLocal()
+        try:
+            bonus_count = get_unused_referral_spins_count(db, user_id)
+        finally:
+            db.close()
+
         if callback.message:
             await callback.message.answer(
-                "Підписку підтверджено ✅\nТепер можеш крутити колесо:",
+                "Підписку підтверджено ✅\n"
+                "Тепер можеш крутити колесо:\n\n"
+                f"🎁 Твої бонусні спіни: {bonus_count}\n\n"
+                "Хочеш ще одну спробу? Запроси друга 👇\n"
+                f"🔗 {referral_link}",
                 reply_markup=build_webapp_keyboard(),
             )
     else:

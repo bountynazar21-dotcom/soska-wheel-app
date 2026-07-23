@@ -6,7 +6,15 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from database import SessionLocal, Spin, Lead, PrizeStock, ensure_prize_stock
+from database import (
+    SessionLocal,
+    Spin,
+    Lead,
+    PrizeStock,
+    ensure_prize_stock,
+    get_unused_referral_spins_count,
+    use_referral_bonus_spin,
+)
 from config import (
     ADMINS,
     CHANNEL_USERNAME,
@@ -259,6 +267,7 @@ async def notify_admins(
     real_spin_number: int | None = None,
     unlocked_slots: int | None = None,
     awarded_prizes: int | None = None,
+    used_bonus_spin: bool = False,
 ):
     bot, _ = get_bot_and_dispatcher()
 
@@ -289,6 +298,8 @@ async def notify_admins(
         notes.append("🧪 ТЕСТ АДМІНА")
     if is_prank:
         notes.append("🤣 PRANK USER")
+    if used_bonus_spin:
+        notes.append("🎁 БОНУСНИЙ СПІН")
 
     admin_note = f" {' | '.join(notes)}" if notes else ""
 
@@ -325,9 +336,13 @@ async def notify_admins(
     caption_parts.extend(
         [
             "",
+            "🎁 Тип прокрутки: бонусний спін"
+            if used_bonus_spin
+            else "🎡 Тип прокрутки: звичайна спроба",
+            "",
             "⏳ Наступна прокрутка: без обмежень для адміна"
             if is_admin
-            else f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів",
+            else f"⏳ Наступна прокрутка через: {SPIN_COOLDOWN_DAYS} днів або за бонусний спін",
             "",
             f"Внутрішній ID: {user_id_str}_{lead.id}",
         ]
@@ -446,29 +461,56 @@ async def spin(request: Request):
                 .first()
             )
 
+            must_use_bonus_spin = False
+
             if last_spin and not is_admin:
                 cooldown_until = last_spin.datetime + datetime.timedelta(
                     days=SPIN_COOLDOWN_DAYS
                 )
 
                 if now < cooldown_until:
-                    time_left = cooldown_until - now
-
-                    return JSONResponse(
-                        {
-                            "prize": last_spin.prize,
-                            "sector_index": PRANK_SECTOR_INDEX
-                            if is_prank_user
-                            else 3,
-                            "repeat": True,
-                            "message": (
-                                "Ви вже крутили колесо. "
-                                f"Наступна спроба через {format_time_left(time_left)}."
-                            ),
-                        }
+                    bonus_count = get_unused_referral_spins_count(
+                        db=db,
+                        user_id=user_id_str,
                     )
 
+                    if bonus_count <= 0:
+                        time_left = cooldown_until - now
+
+                        return JSONResponse(
+                            {
+                                "prize": last_spin.prize,
+                                "sector_index": PRANK_SECTOR_INDEX
+                                if is_prank_user
+                                else 3,
+                                "repeat": True,
+                                "message": (
+                                    "Ви вже крутили колесо. "
+                                    f"Наступна спроба через {format_time_left(time_left)}.\n\n"
+                                    "Або запросіть друга та отримайте додатковий спін 🎁"
+                                ),
+                            }
+                        )
+
+                    must_use_bonus_spin = True
+
             if is_prank_user and not is_admin:
+                if must_use_bonus_spin:
+                    bonus_used = use_referral_bonus_spin(
+                        db=db,
+                        user_id=user_id_str,
+                    )
+
+                    if not bonus_used:
+                        return JSONResponse(
+                            {
+                                "prize": "Нічого",
+                                "sector_index": 3,
+                                "repeat": True,
+                                "message": "Бонусний спін не знайдено. Спробуй ще раз.",
+                            }
+                        )
+
                 row = Spin(
                     username=str(username),
                     user_id=user_id_str,
@@ -486,6 +528,7 @@ async def spin(request: Request):
                     user_id_str=user_id_str,
                     is_admin=False,
                     is_prank=True,
+                    used_bonus_spin=must_use_bonus_spin,
                 )
 
                 return JSONResponse(
@@ -500,6 +543,22 @@ async def spin(request: Request):
             # Вибір і запис результату захищені глобальним lock,
             # щоб подарунки не списались неправильно при одночасних прокрутках.
             async with PRIZE_DISTRIBUTION_LOCK:
+                if must_use_bonus_spin:
+                    bonus_used = use_referral_bonus_spin(
+                        db=db,
+                        user_id=user_id_str,
+                    )
+
+                    if not bonus_used:
+                        return JSONResponse(
+                            {
+                                "prize": "Нічого",
+                                "sector_index": 3,
+                                "repeat": True,
+                                "message": "Бонусний спін не знайдено. Спробуй ще раз.",
+                            }
+                        )
+
                 real_spin_count_before = get_real_spin_count(db)
 
                 # Адмін не рухає прогрес розіграшу.
@@ -539,6 +598,7 @@ async def spin(request: Request):
                 real_spin_number=real_spin_number,
                 unlocked_slots=unlocked_slots,
                 awarded_prizes=awarded_prizes,
+                used_bonus_spin=must_use_bonus_spin,
             )
 
             await notify_user_win(
