@@ -355,3 +355,69 @@ def use_referral_bonus_spin(db, user_id: str) -> bool:
     db.commit()
 
     return True
+# =========================
+# АДМІН-СКИДАННЯ
+# =========================
+
+def reset_all_registrations(db) -> int:
+    """
+    Видаляє всі реєстрації користувачів.
+    Спіни не чіпає.
+    Реферальні бонуси теж не чіпає, щоб один і той самий друг
+    не міг давати бонус повторно після скидання реєстрацій.
+    """
+
+    deleted_count = db.query(Lead).delete()
+    db.commit()
+
+    return deleted_count
+
+
+def set_spin_blocks_reset_time(db) -> datetime.datetime:
+    """
+    Ставить системну дату, після якої старі спіни не блокують користувача.
+    Тобто всі прокрутки ДО цієї дати більше не враховуються для cooldown.
+    """
+
+    reset_time = datetime.datetime.utcnow()
+    setting_key = "spin_blocks_reset_at"
+
+    setting = (
+        db.query(AppSetting)
+        .filter(AppSetting.key == setting_key)
+        .first()
+    )
+
+    if setting is None:
+        setting = AppSetting(
+            key=setting_key,
+            value=reset_time.isoformat(),
+        )
+        db.add(setting)
+    else:
+        setting.value = reset_time.isoformat()
+
+    db.commit()
+
+    return reset_time
+
+
+def get_spin_blocks_reset_time(db) -> datetime.datetime | None:
+    """
+    Повертає дату останнього скидання блокувань.
+    Усі спіни до цієї дати не враховуються для cooldown.
+    """
+
+    setting = (
+        db.query(AppSetting)
+        .filter(AppSetting.key == "spin_blocks_reset_at")
+        .first()
+    )
+
+    if setting is None:
+        return None
+
+    try:
+        return datetime.datetime.fromisoformat(setting.value)
+    except Exception:
+        return None

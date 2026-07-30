@@ -14,6 +14,7 @@ from database import (
     ensure_prize_stock,
     get_unused_referral_spins_count,
     use_referral_bonus_spin,
+    get_spin_blocks_reset_time,
 )
 from config import (
     ADMINS,
@@ -454,9 +455,20 @@ async def spin(request: Request):
                     }
                 )
 
-            last_spin = (
+            last_spin_query = (
                 db.query(Spin)
                 .filter(Spin.user_id == user_id_str)
+            )
+
+            reset_time = get_spin_blocks_reset_time(db)
+
+            if reset_time is not None:
+                last_spin_query = last_spin_query.filter(
+                    Spin.datetime >= reset_time
+                )
+
+            last_spin = (
+                last_spin_query
                 .order_by(Spin.datetime.desc())
                 .first()
             )

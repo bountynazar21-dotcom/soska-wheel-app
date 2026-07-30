@@ -21,6 +21,9 @@ from database import (
     Spin,
     add_referral_bonus,
     get_unused_referral_spins_count,
+    get_spin_blocks_reset_time,
+    reset_all_registrations,
+    set_spin_blocks_reset_time,
 )
 from config import (
     BOT_TOKEN,
@@ -132,9 +135,18 @@ def get_active_cooldown(user_id: str | int | None):
     db = SessionLocal()
 
     try:
-        last_spin = (
+        query = (
             db.query(Spin)
             .filter(Spin.user_id == user_id_str)
+        )
+
+        reset_time = get_spin_blocks_reset_time(db)
+
+        if reset_time is not None:
+            query = query.filter(Spin.datetime >= reset_time)
+
+        last_spin = (
+            query
             .order_by(Spin.datetime.desc())
             .first()
         )
@@ -208,6 +220,53 @@ def parse_referrer_id(message: Message) -> str | None:
         return None
 
     return referrer_id
+
+
+@router.message(F.text == "/reset_registrations")
+async def reset_registrations_command(message: Message) -> None:
+    if not is_admin_user(message.from_user.id):
+        await message.answer("Немає доступу.")
+        return
+
+    db = SessionLocal()
+
+    try:
+        deleted_count = reset_all_registrations(db)
+    except Exception as e:
+        logging.error(f"Failed to reset registrations: {e}")
+        await message.answer("❌ Не вдалося скинути реєстрації.")
+        return
+    finally:
+        db.close()
+
+    await message.answer(
+        "✅ Реєстрації скинуто до 0.\n\n"
+        f"Видалено реєстрацій: {deleted_count}"
+    )
+
+
+@router.message(F.text == "/reset_spin_blocks")
+async def reset_spin_blocks_command(message: Message) -> None:
+    if not is_admin_user(message.from_user.id):
+        await message.answer("Немає доступу.")
+        return
+
+    db = SessionLocal()
+
+    try:
+        reset_time = set_spin_blocks_reset_time(db)
+    except Exception as e:
+        logging.error(f"Failed to reset spin blocks: {e}")
+        await message.answer("❌ Не вдалося скинути блокування прокруток.")
+        return
+    finally:
+        db.close()
+
+    await message.answer(
+        "✅ Блокування прокруток скинуто.\n\n"
+        "Тепер усі користувачі можуть одразу крутити колесо знову.\n"
+        f"Час скидання: {reset_time.isoformat()} UTC"
+    )
 
 
 @router.message(CommandStart())
