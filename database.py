@@ -8,6 +8,7 @@ from sqlalchemy import (
     String,
     DateTime,
     Boolean,
+    text,
 )
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -355,20 +356,40 @@ def use_referral_bonus_spin(db, user_id: str) -> bool:
     db.commit()
 
     return True
+
+
 # =========================
 # АДМІН-СКИДАННЯ
 # =========================
 
 def reset_all_registrations(db) -> int:
     """
-    Видаляє всі реєстрації користувачів.
+    Видаляє всі реєстрації користувачів і скидає ID заявок назад на 1.
     Спіни не чіпає.
-    Реферальні бонуси теж не чіпає, щоб один і той самий друг
+    Реферальні бонуси не чіпає, щоб один і той самий друг
     не міг давати бонус повторно після скидання реєстрацій.
     """
 
-    deleted_count = db.query(Lead).delete()
-    db.commit()
+    deleted_count = db.query(Lead).count()
+
+    try:
+        engine_name = db.bind.dialect.name
+
+        if engine_name == "postgresql":
+            db.execute(text("TRUNCATE TABLE leads RESTART IDENTITY CASCADE"))
+
+        elif engine_name == "sqlite":
+            db.query(Lead).delete()
+            db.execute(text("DELETE FROM sqlite_sequence WHERE name='leads'"))
+
+        else:
+            db.query(Lead).delete()
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
 
     return deleted_count
 

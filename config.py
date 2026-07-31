@@ -45,26 +45,21 @@ WIN_CHANCE_PERCENT = float(
 # 5-й подарунок — 1140-та прокрутка
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "six-prizes-1200-participants-v1",
+    "six-prizes-1200-participants-v2",
 )
 
 PRIZE_UNLOCK_SPINS = [
-    180,
-    372,
-    564,
-    756,
-    948,
-    1140,
+    1111
+    1301,
+    1421,
+    1541,
+    1661,
 ]
 
 # Старт розіграшу:
 # 10 липня 2026 року о 08:30 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-07-10T05:30:00"
-
-# Завершення розіграшу:
-# 10 липня 2026 року о 20:30 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-07-10T17:30:00"
-
+CAMPAIGN_START_AT_UTC = "2026-07-31T05:30:00"
+CAMPAIGN_END_AT_UTC = "2026-07-31T17:30:00"
 # Нова версія призового фонду.
 # Версію потрібно змінити, щоб база оновила назви та залишки призів.
 PRIZE_POOL_VERSION = os.getenv(
