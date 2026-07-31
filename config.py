@@ -49,7 +49,7 @@ PRIZE_POOL_VERSION = os.getenv(
 )
 
 PRIZE_UNLOCK_SPINS = [
-    1111
+    1111,
     1301,
     1421,
     1541,
