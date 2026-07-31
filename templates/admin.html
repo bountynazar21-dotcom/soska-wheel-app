@@ -22,6 +22,33 @@
       font-size: 14px;
     }
 
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+      border: 1px solid #e7e7ef;
+    }
+
+    .stat-title {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: 800;
+      color: #7b45ff;
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
@@ -139,7 +166,24 @@
 <body>
   <h1>Soska Bar — Admin</h1>
   <div class="subtitle">
-    Список прокруток колеса. Виграші подарунків виділені червоним.
+    Статистика реєстрацій та список прокруток колеса. Виграші подарунків виділені червоним.
+  </div>
+
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-title">Реєстрацій</div>
+      <div class="stat-value">{{ registrations_count }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-title">Прокруток</div>
+      <div class="stat-value">{{ spins_count }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-title">Переможців</div>
+      <div class="stat-value">{{ winners_count }}</div>
+    </div>
   </div>
 
   <table>

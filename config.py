@@ -43,11 +43,17 @@ WIN_CHANCE_PERCENT = float(
 # 3-й подарунок — 660-та прокрутка
 # 4-й подарунок — 900-та прокрутка
 # 5-й подарунок — 1140-та прокрутка
+PRIZE_POOL_VERSION = os.getenv(
+    "PRIZE_POOL_VERSION",
+    "six-prizes-1200-participants-v1",
+)
+
 PRIZE_UNLOCK_SPINS = [
     180,
-    420,
-    660,
-    900,
+    372,
+    564,
+    756,
+    948,
     1140,
 ]
 
@@ -79,7 +85,7 @@ PRIZES_ = [
     {
         "sector_index": 0,
         "prize": "Vaporesso XROS Mini",
-        "stock": 1,
+        "stock": 2,
         "weight": 1,
     },
     {
@@ -103,13 +109,13 @@ PRIZES_ = [
     {
         "sector_index": 4,
         "prize": "Vaporesso XROS 5 MINI",
-        "stock": 1,
+        "stock": 0,
         "weight": 1,
     },
     {
         "sector_index": 5,
         "prize": "OXVA XLIM GO Lite",
-        "stock": 1,
+        "stock":2,
         "weight": 1,
     },
 ]

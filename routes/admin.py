@@ -2,8 +2,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from database import SessionLocal, Spin
-from config import ADMINS
+from database import SessionLocal, Spin, Lead
+from config import ADMINS, PRANK_TEXT
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -23,15 +23,27 @@ async def admin_page(request: Request, user_id: int | None = None):
     try:
         spins = db.query(Spin).order_by(Spin.id.desc()).all()
 
+        registrations_count = db.query(Lead).count()
+        spins_count = db.query(Spin).count()
+
+        winners_count = (
+            db.query(Spin)
+            .filter(Spin.prize != "Нічого")
+            .filter(Spin.prize != PRANK_TEXT)
+            .count()
+        )
+
         return templates.TemplateResponse(
             "admin.html",
             {
                 "request": request,
                 "spins": spins,
+                "registrations_count": registrations_count,
+                "spins_count": spins_count,
+                "winners_count": winners_count,
                 "user_id": user_id,
             },
         )
 
     finally:
         db.close()
-
