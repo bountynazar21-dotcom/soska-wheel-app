@@ -24,8 +24,8 @@ SPIN_COOLDOWN_DAYS = 7
 # Ліміт друзів, за яких можна отримати бонусні спіни за день
 REFERRAL_DAILY_LIMIT = int(os.getenv("REFERRAL_DAILY_LIMIT", "5"))
 
-# Середня очікувана кількість учасників
-EXPECTED_PARTICIPANTS = 1200
+# Максимальна очікувана кількість учасників
+EXPECTED_PARTICIPANTS = 850
 
 # Режим видачі подарунків:
 # controlled = подарунки відкриваються на конкретних прокрутках
@@ -40,19 +40,16 @@ WIN_CHANCE_PERCENT = float(
 # Версію потрібно змінити, щоб база оновила назви та залишки призів.
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "remaining-prizes-2026-07-31-v3",
+    "five-prizes-850-participants-v4",
 )
 
-# Слоти відкриття подарунків.
-# НЕ ЧІПАВ — залишив як ти скинув.
+# 5 подарунків на 850 учасників
 PRIZE_UNLOCK_SPINS = [
-    120,
-    240,
+    130,
+    300,
     400,
-    505,
-    700,
-    800,
-    900,
+    560,
+    730,
 ]
 
 # Старт розіграшу:
@@ -88,7 +85,7 @@ PRIZES_ = [
     {
         "sector_index": 2,
         "prize": "POD Система IBAR Smart Pod Carbon",
-        "stock": 1,
+        "stock": 0,
         "weight": 1,
     },
     {
