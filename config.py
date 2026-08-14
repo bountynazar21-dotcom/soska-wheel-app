@@ -36,11 +36,10 @@ WIN_CHANCE_PERCENT = float(
     os.getenv("WIN_CHANCE_PERCENT", "0")
 )
 
-# Нова версія призового фонду.
-# Версію потрібно змінити, щоб база оновила назви та залишки призів.
+# Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v4",
+    "five-prizes-850-participants-v5",
 )
 
 # 5 подарунків на 850 учасників
@@ -53,15 +52,14 @@ PRIZE_UNLOCK_SPINS = [
 ]
 
 # Старт розіграшу:
-# 7 серпня 2026 року о 08:30 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-08-07T05:30:00"
+# 14 серпня 2026 року о 09:00 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-08-14T06:00:00"
 
 # Завершення розіграшу:
-# 7 серпня 2026 року о 20:30 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-08-07T17:30:00"
+# 14 серпня 2026 року о 21:00 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-08-14T18:00:00"
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
-# ВІД ВЕРХУ ЗА ГОДИННИКОВОЮ:
 #
 # 0 — Vaporesso XROS Mini
 # 1 — OXVA XLIM GO KIT
@@ -69,17 +67,18 @@ CAMPAIGN_END_AT_UTC = "2026-08-07T17:30:00"
 # 3 — Нічого
 # 4 — Vaporesso XROS 5 MINI
 # 5 — OXVA XLIM GO Lite
-PRIZES_ = [
+
+PRIZES = [
     {
         "sector_index": 0,
         "prize": "Vaporesso XROS Mini",
-        "stock": 2,
+        "stock": 3,
         "weight": 1,
     },
     {
         "sector_index": 1,
         "prize": "OXVA XLIM GO KIT",
-        "stock": 1,
+        "stock": 0,
         "weight": 1,
     },
     {
@@ -108,8 +107,7 @@ PRIZES_ = [
     },
 ]
 
-# Список prank-користувачів очищений.
-# Тепер ніхто не буде отримувати "шпіоніро" автоматично.
+# Список prank-користувачів очищений
 PRANK_USER_IDS: set[int] = set()
 
 PRANK_TEXT = "Хахах, попався шпіоніро ))"
