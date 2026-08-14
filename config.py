@@ -68,7 +68,7 @@ CAMPAIGN_END_AT_UTC = "2026-08-14T18:00:00"
 # 4 — Vaporesso XROS 5 MINI
 # 5 — OXVA XLIM GO Lite
 
-PRIZES = [
+PRIZES_ = [
     {
         "sector_index": 0,
         "prize": "Vaporesso XROS Mini",
