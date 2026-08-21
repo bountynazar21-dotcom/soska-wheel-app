@@ -39,7 +39,7 @@ WIN_CHANCE_PERCENT = float(
 # Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v5",
+    "five-prizes-850-participants-v6",
 )
 
 # 5 подарунків на 850 учасників
@@ -52,8 +52,8 @@ PRIZE_UNLOCK_SPINS = [
 ]
 
 # Старт розіграшу:
-# 21 серпня 2026 року о 09:00 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-08-21T06:00:00"
+# 21 серпня 2026 року о 08:00 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-08-21T05:00:00"
 
 # Завершення розіграшу:
 # 21 серпня 2026 року о 21:00 за Києвом
