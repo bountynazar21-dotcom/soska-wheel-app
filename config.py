@@ -9,7 +9,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 WEBAPP_URL = os.getenv(
     "WEBAPP_URL",
-    f"{APP_BASE_URL}/static/index.html?v=38",
+    f"{APP_BASE_URL}/static/index.html?v=39",
 )
 
 ADMINS: set[int] = {
@@ -39,7 +39,7 @@ WIN_CHANCE_PERCENT = float(
 # Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v6",
+    "five-prizes-850-participants-v7",
 )
 
 # 5 подарунків на 850 учасників
@@ -52,12 +52,12 @@ PRIZE_UNLOCK_SPINS = [
 ]
 
 # Старт розіграшу:
-# 21 серпня 2026 року о 08:00 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-08-21T05:00:00"
+# 28 серпня 2026 року о 08:30 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-08-28T05:30:00"
 
 # Завершення розіграшу:
-# 21 серпня 2026 року о 21:00 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-08-21T18:00:00"
+# 28 серпня 2026 року о 20:00 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-08-28T17:00:00"
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
 #
