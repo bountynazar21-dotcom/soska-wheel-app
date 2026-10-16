@@ -40,7 +40,7 @@ WIN_CHANCE_PERCENT = float(
 # Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v11",
+    "five-prizes-850-participants-v12",
 )
 
 # 5 подарунків на 850 учасників
@@ -53,12 +53,12 @@ PRIZE_UNLOCK_SPINS = [
 ]
 
 # Старт розіграшу:
-# 9 жовтня 2026 року о 09:00 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-10-09T06:00:00"
+# 16 жовтня 2026 року о 09:00 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-10-16T06:00:00"
 
 # Завершення розіграшу:
-# 9 жовтня 2026 року о 21:00 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-10-09T18:00:00"
+# 16 жовтня 2026 року о 21:00 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-10-16T18:00:00"
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
 #
