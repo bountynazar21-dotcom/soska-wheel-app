@@ -1,3 +1,4 @@
+
 import os
 
 APP_BASE_URL = os.getenv(
@@ -23,14 +24,18 @@ CHANNEL_URL = "https://t.me/soska_bar"
 SPIN_COOLDOWN_DAYS = 7
 
 # Ліміт друзів, за яких можна отримати бонусні спіни за день
-REFERRAL_DAILY_LIMIT = int(os.getenv("REFERRAL_DAILY_LIMIT", "5"))
+REFERRAL_DAILY_LIMIT = int(
+    os.getenv("REFERRAL_DAILY_LIMIT", "5")
+)
 
 # Максимальна очікувана кількість учасників
 EXPECTED_PARTICIPANTS = 850
 
 # Режим видачі подарунків:
 # controlled = подарунки відкриваються на конкретних прокрутках
-PRIZE_MODE = os.getenv("PRIZE_MODE", "controlled").strip().lower()
+PRIZE_MODE = os.getenv(
+    "PRIZE_MODE", "controlled"
+).strip().lower()
 
 # У controlled-режимі випадковий шанс не використовується
 WIN_CHANCE_PERCENT = float(
@@ -40,25 +45,25 @@ WIN_CHANCE_PERCENT = float(
 # Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v12",
+    "five-prizes-850-participants-v13",
 )
 
 # 5 подарунків на 850 учасників
 PRIZE_UNLOCK_SPINS = [
-    250,
+    150,
+    300,
     500,
-    700,
-    1000,
-    1300,
+    777,
+    999,
 ]
 
 # Старт розіграшу:
-# 16 жовтня 2026 року о 09:00 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-10-16T06:00:00"
+# 23 жовтня 2026 року о 09:00 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-10-23T06:00:00"
 
 # Завершення розіграшу:
-# 16 жовтня 2026 року о 21:00 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-10-16T18:00:00"
+# 23 жовтня 2026 року о 21:00 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-10-23T18:00:00"
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
 #
