@@ -1,4 +1,3 @@
-
 import os
 
 APP_BASE_URL = os.getenv(
@@ -45,25 +44,24 @@ WIN_CHANCE_PERCENT = float(
 # Версія призового фонду
 PRIZE_POOL_VERSION = os.getenv(
     "PRIZE_POOL_VERSION",
-    "five-prizes-850-participants-v13",
+    "five-prizes-850-participants-v14",
 )
 
 # 5 подарунків на 850 учасників
 PRIZE_UNLOCK_SPINS = [
     150,
     300,
+    400,
     500,
-    777,
     999,
 ]
 
-# Старт розіграшу:
-# 23 жовтня 2026 року о 09:00 за Києвом
-CAMPAIGN_START_AT_UTC = "2026-10-23T06:00:00"
+# 6 листопада 2026 року о 09:00 за Києвом
+CAMPAIGN_START_AT_UTC = "2026-11-06T07:00:00"
 
 # Завершення розіграшу:
-# 23 жовтня 2026 року о 21:00 за Києвом
-CAMPAIGN_END_AT_UTC = "2026-10-23T18:00:00"
+# 6 листопада 2026 року о 21:00 за Києвом
+CAMPAIGN_END_AT_UTC = "2026-11-06T19:00:00"
 
 # ПОРЯДОК СЕКТОРІВ — ЯК У wheel.js
 #
