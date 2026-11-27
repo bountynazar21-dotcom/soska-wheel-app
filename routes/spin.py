@@ -26,6 +26,7 @@ from config import (
     PRANK_SECTOR_INDEX,
     PRIZE_UNLOCK_SPINS,
     CAMPAIGN_START_AT_UTC,
+    CAMPAIGN_END_AT_UTC,
 )
 from bot import get_bot_and_dispatcher
 
@@ -107,6 +108,21 @@ def get_campaign_start_datetime() -> datetime.datetime | None:
         return datetime.datetime.fromisoformat(CAMPAIGN_START_AT_UTC)
     except Exception as e:
         logging.error(f"Invalid CAMPAIGN_START_AT_UTC: {e}")
+        return None
+
+
+
+def get_campaign_end_datetime() -> datetime.datetime | None:
+    """
+    Повертає час завершення кампанії з config.py.
+    """
+    if not CAMPAIGN_END_AT_UTC:
+        return None
+
+    try:
+        return datetime.datetime.fromisoformat(CAMPAIGN_END_AT_UTC)
+    except Exception as e:
+        logging.error(f"Invalid CAMPAIGN_END_AT_UTC: {e}")
         return None
 
 
@@ -420,6 +436,29 @@ async def spin(request: Request):
             )
 
             now = datetime.datetime.utcnow()
+
+            campaign_start = get_campaign_start_datetime()
+            campaign_end = get_campaign_end_datetime()
+
+            if campaign_start is not None and now < campaign_start:
+                return JSONResponse(
+                    {
+                        "prize": "Нічого",
+                        "sector_index": 3,
+                        "repeat": True,
+                        "message": "Розіграш ще не розпочався. Старт о 08:00 за Києвом.",
+                    }
+                )
+
+            if campaign_end is not None and now >= campaign_end:
+                return JSONResponse(
+                    {
+                        "prize": "Нічого",
+                        "sector_index": 3,
+                        "repeat": True,
+                        "message": "Розіграш завершено. Дякуємо за участь!",
+                    }
+                )
 
             lead = (
                 db.query(Lead)
