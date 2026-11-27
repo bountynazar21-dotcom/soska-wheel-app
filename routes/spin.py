@@ -219,8 +219,13 @@ def choose_controlled_prize(
     unlocked_slots = get_unlocked_prize_slots(real_spin_number)
     awarded_prizes = get_awarded_real_prize_count(db)
 
-    # На цьому етапі ще не можна видати новий подарунок
-    if awarded_prizes >= unlocked_slots:
+    # Подарунок видається лише на точній виграшній позиції.
+    # Після неї наступні прокрутки вже не отримують цей подарунок.
+    if real_spin_number not in PRIZE_UNLOCK_SPINS:
+        prize, sector_index = get_nothing_result()
+        return prize, sector_index, None
+
+    if awarded_prizes >= len(PRIZE_UNLOCK_SPINS):
         prize, sector_index = get_nothing_result()
         return prize, sector_index, None
 
@@ -618,12 +623,17 @@ async def spin(request: Request):
                     0 if is_admin else 1
                 )
 
-                prize, sector_index, selected_prize_stock = choose_controlled_prize(
-                    db=db,
-                    real_spin_number=real_spin_number,
-                )
+                if is_admin:
+                    # Адмінські тестові прокрутки не займають виграшні позиції.
+                    prize, sector_index = get_nothing_result()
+                    selected_prize_stock = None
+                else:
+                    prize, sector_index, selected_prize_stock = choose_controlled_prize(
+                        db=db,
+                        real_spin_number=real_spin_number,
+                    )
 
-                if selected_prize_stock is not None and not is_admin:
+                if selected_prize_stock is not None:
                     selected_prize_stock.stock -= 1
 
                 row = Spin(
